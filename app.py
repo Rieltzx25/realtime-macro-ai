@@ -41,10 +41,21 @@ st.title("🚀 Realtime Macro & Crypto Dashboard")
 
 RSS_FEEDS = {
     "CNBC Economy": "https://www.cnbc.com/id/20910258/device/rss/rss.html",
-    "Investing Crypto": "https://www.investing.com/rss/news_301.rss",
-    "CoinDesk": "https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=xml",
+    "CNBC Finance": "https://www.cnbc.com/id/10000664/device/rss/rss.html",
+    "Reuters Business": "https://www.reutersagency.com/feed/?best-topics=business-finance",
+    "Reuters Markets": "https://www.reutersagency.com/feed/?best-topics=markets",
+    "Investing.com Economy": "https://www.investing.com/rss/news_14.rss",
+    "Investing.com Crypto": "https://www.investing.com/rss/news_301.rss",
+    "MarketWatch": "https://feeds.marketwatch.com/marketwatch/topstories/",
+    "Bloomberg Markets": "https://www.bloomberg.com/feed/podcast/bloomberg-surveillance.xml",
+    "Financial Times": "https://www.ft.com/?format=rss",
+    "CoinDesk": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+    "Cointelegraph": "https://cointelegraph.com/rss",
+    "Yahoo Finance": "https://finance.yahoo.com/news/rssindex",
     "CryptoSlate": "https://cryptoslate.com/feed/",
-    "Bloomberg Markets": "https://www.bloomberg.com/feed/podcast/markets.xml"
+    "Bitcoin Magazine": "https://bitcoinmagazine.com/.rss/full/",
+    "NewsBTC": "https://www.newsbtc.com/feed/",
+    "CryptoPotato": "https://cryptopotato.com/feed/"
 }
 
 # Sidebar
