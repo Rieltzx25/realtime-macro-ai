@@ -1,13 +1,5 @@
 import streamlit as st
 import feedparser
-from textblob import TextBlob
-import nltk
-
-# Periksa apakah corpus sudah ter-download
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
 
 st.set_page_config(page_title="Realtime Macro News", layout="wide")
 
@@ -22,13 +14,6 @@ RSS_FEEDS = {
 
 KEYWORDS = ["inflation", "interest rate", "policy", "economy", "employment", "monetary"]
 
-def summarize(text):
-    blob = TextBlob(text)
-    sentences = blob.sentences
-    if len(sentences) > 1:
-        return ' '.join([str(sentences[0]), str(sentences[1])])
-    return text
-
 for source, url in RSS_FEEDS.items():
     feed = feedparser.parse(url)
     with st.expander(f"🗞️ **{source}**"):
@@ -37,8 +22,8 @@ for source, url in RSS_FEEDS.items():
             if any(keyword.lower() in entry.title.lower() for keyword in KEYWORDS):
                 st.markdown(f"### [{entry.title}]({entry.link})")
                 if hasattr(entry, 'summary'):
-                    summary = summarize(entry.summary)
-                    st.write(f"> {summary}")
+                    summary = entry.summary.split(".")[:2]
+                    st.write(f"> {'.'.join(summary)}.")
                 count += 1
                 if count == 5:
                     break  # Batasi 5 berita per sumber
