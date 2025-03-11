@@ -1,6 +1,9 @@
 import streamlit as st
 import feedparser
 from textblob import TextBlob
+import nltk
+
+nltk.download('punkt')
 
 st.set_page_config(page_title="Realtime Macro News", layout="wide")
 
