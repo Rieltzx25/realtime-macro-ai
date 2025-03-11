@@ -3,7 +3,11 @@ import feedparser
 from textblob import TextBlob
 import nltk
 
-nltk.download('punkt')
+# Periksa apakah corpus sudah ter-download
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
 
 st.set_page_config(page_title="Realtime Macro News", layout="wide")
 
