@@ -4,82 +4,90 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-st.set_page_config(page_title="Realtime Macro & Crypto Dashboard", layout="wide")
+st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
-st.title("🚀 Realtime Macro & Crypto Dashboard")
+# Fungsi ambil berita dari RSS
+def fetch_news(url, max_entries=5):
+    feed = feedparser.parse(url)
+    news_data = []
+    for entry in feed.entries[:max_entries]:
+        summary = entry.summary[:300] + "..." if hasattr(entry, 'summary') else ""
+        published = entry.get("published", "")
+        news_data.append({
+            "title": entry.title,
+            "link": entry.link,
+            "summary": summary,
+            "published": published
+        })
+    return news_data
 
-# Comprehensive RSS feeds
+# Fungsi ambil harga crypto realtime (Coingecko)
+def get_crypto_prices():
+    ids = 'bitcoin,ethereum,solana'
+    url = f"https://api.coingecko.com/api/v3/simple/price?ids={ids}&vs_currencies=usd&include_24hr_change=true"
+    response = requests.get(url).json()
+    return response
+
+# RSS Feeds (makroekonomi & crypto)
 RSS_FEEDS = {
-    "CNBC - Economy": "https://www.cnbc.com/id/10001147/device/rss/rss.html",
-    "CNBC - Finance": "https://www.cnbc.com/id/10000664/device/rss/rss.html",
-    "Reuters - Business": "https://www.reutersagency.com/feed/?best-topics=business-finance&post_type=best",
-    "Reuters - Markets": "http://feeds.reuters.com/reuters/businessNews",
-    "Investing.com - Economy": "https://www.investing.com/rss/news_14.rss",
-    "Investing.com - Crypto": "https://www.investing.com/rss/news_301.rss",
+    "CNBC Economy": "https://www.cnbc.com/id/20910258/device/rss/rss.html",
+    "CNBC Finance": "https://www.cnbc.com/id/10000664/device/rss/rss.html",
+    "Reuters Business": "https://www.reutersagency.com/feed/?best-topics=business-finance",
+    "Reuters Markets": "https://www.reutersagency.com/feed/?best-topics=markets",
+    "Investing.com Economy": "https://www.investing.com/rss/news_14.rss",
+    "Investing.com Crypto": "https://www.investing.com/rss/news_301.rss",
     "MarketWatch": "https://feeds.marketwatch.com/marketwatch/topstories/",
-    "Bloomberg Markets": "https://www.bloomberg.com/feed/podcast/bloomberg-markets.xml",
+    "Bloomberg Markets": "https://www.bloomberg.com/feed/podcast/bloomberg-surveillance.xml",
     "Financial Times": "https://www.ft.com/?format=rss",
-    "CoinDesk - Crypto": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+    "CoinDesk": "https://www.coindesk.com/arc/outboundfeeds/rss/",
     "Cointelegraph": "https://cointelegraph.com/rss",
     "Yahoo Finance": "https://finance.yahoo.com/news/rssindex",
     "CryptoSlate": "https://cryptoslate.com/feed/",
     "Bitcoin Magazine": "https://bitcoinmagazine.com/.rss/full/",
     "NewsBTC": "https://www.newsbtc.com/feed/",
-    "CryptoPotato": "https://cryptopotato.com/feed/",
-    "The Block": "https://www.theblock.co/rss.xml"
+    "CryptoPotato": "https://cryptopotato.com/feed/"
 }
 
-# Fetch RSS feed function
-def fetch_news(url):
-    feed = feedparser.parse(url)
-    news_data = []
-    for entry in feed.entries[:5]:  # ambil 5 berita terbaru saja
-        published_time = entry.get("published", "Unknown time")
-        summary = entry.get('summary', 'No summary available')[:300] + "..."
-        news_data.append({
-            "title": entry.title,
-            "link": entry.link,
-            "published": published_time,
-            "summary": summary
-        })
-    return news_data
+# Judul
+st.title("🚀 Realtime Macro & Crypto Dashboard")
 
+# Crypto Prices
+crypto_prices = get_crypto_prices()
+st.subheader("Live Crypto Prices")
 
-# Crypto price fetcher
-def get_crypto_prices():
-    url = "https://api.coingecko.com/api/v3/simple/price"
-    params = {
-        'ids': 'bitcoin,ethereum,solana',
-        'vs_currencies': 'usd',
-        'include_24hr_change': 'true'
-    }
-    response = requests.get(url, params=params)
-    return response.json()
+prices_df = pd.DataFrame({
+    'Crypto': ['Bitcoin (BTC)', 'Ethereum (ETH)', 'Solana (SOL)'],
+    'Price (USD)': [crypto_prices['bitcoin']['usd'], crypto_prices['ethereum']['usd'], crypto_prices['solana']['usd']],
+    '24h Change (%)': [
+        crypto_prices['bitcoin']['usd_24h_change'],
+        crypto_prices['ethereum']['usd_24h_change'],
+        crypto_prices['solana']['usd_24h_change']
+    ]
+})
+st.table(prices_df.style.format({"Price (USD)": "${:,.2f}", "24h Change (%)": "{:.2f}%"}))
+st.info('🔄 Data refreshes automatically every 15 seconds.')
 
-# UI Layout
-col1, col2 = st.columns([3, 1])
-
-# News display
-with col1:
-    tabs = st.tabs(RSS_FEEDS.keys())
-    for tab, (source, url) in zip(tabs, RSS_FEEDS.items()):
-        with tab:
-            news = fetch_news(url)
-            for item in news:
-                st.markdown(f"### [{item['title']}]({item['link']})")
-                st.caption(f"🕑 {item['published']}")
-                st.write(item['summary'])
-
-# Crypto prices
-with col2:
-    st.subheader("💱 Live Crypto Prices")
-    crypto_prices = get_crypto_prices()
-    df = pd.DataFrame.from_dict(crypto_prices, orient='index')
-    df.columns = ['Price (USD)', '24h Change (%)']
-    st.table(df)
-
-    st.info("ℹ️ Data refreshes automatically every 15 seconds.")
-
-# Auto-refresh (15 seconds)
+# Auto-refresh setiap 15 detik
 st_autorefresh = st.empty()
-st_autorefresh.markdown("<meta http-equiv='refresh' content='15'>", unsafe_allow_html=True)
+
+# Berita terbaru
+def display_news():
+    st.subheader("Latest Macro & Crypto News")
+    for source, url in RSS_FEEDS.items():
+        news_items = fetch_news(url, 3)
+        st.markdown(f"### 📌 {source}")
+        for item in news_items:
+            st.write(f"[{item['title']}]({item['link']})")
+            st.caption(f"{item['published']}")
+            st.write(f"{item['summary']}")
+            st.divider()
+
+# Tampilkan berita terbaru
+display_news()
+
+# Refresh otomatis tiap 15 detik tanpa reload penuh
+import time
+
+with st_autorefresh:
+    time.sleep(15)
+    st.experimental_rerun()
