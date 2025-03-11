@@ -68,4 +68,4 @@ while True:
 
         st.info("🔄 **Update otomatis setiap 60 detik.**")
     
-    time.sleep(30)  # refresh setiap 60 detik
+    time.sleep(60)  # refresh setiap 60 detik
