@@ -22,6 +22,11 @@ RSS_FEEDS = {
     "CoinDesk - Crypto": "https://www.coindesk.com/arc/outboundfeeds/rss/",
     "Cointelegraph": "https://cointelegraph.com/rss",
     "Yahoo Finance": "https://finance.yahoo.com/news/rssindex",
+    "CryptoSlate": "https://cryptoslate.com/feed/",
+    "Bitcoin Magazine": "https://bitcoinmagazine.com/.rss/full/",
+    "NewsBTC": "https://www.newsbtc.com/feed/",
+    "CryptoPotato": "https://cryptopotato.com/feed/",
+    "The Block": "https://www.theblock.co/rss.xml"
 }
 
 # Fetch RSS feed function
