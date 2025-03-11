@@ -44,12 +44,7 @@ RSS_FEEDS = {
     "Investing Crypto": "https://www.investing.com/rss/news_301.rss",
     "CoinDesk": "https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=xml",
     "CryptoSlate": "https://cryptoslate.com/feed/",
-    "Bloomberg Markets": "https://www.bloomberg.com/feed/podcast/markets.xml",
-    "Cointelegraph": "https://cointelegraph.com/rss",
-    "Bitcoin Magazine": "https://bitcoinmagazine.com/.rss/full/",
-    "NewsBTC": "https://www.newsbtc.com/feed/",
-    "CryptoPotato": "https://cryptopotato.com/feed/",
-    "The Block": "https://www.theblock.co/rss.xml"
+    "Bloomberg Markets": "https://www.bloomberg.com/feed/podcast/markets.xml"
 }
 
 # Sidebar
