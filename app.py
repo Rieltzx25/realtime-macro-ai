@@ -30,18 +30,20 @@ RSS_FEEDS = {
 }
 
 # Fetch RSS feed function
-def fetch_news(feed_url):
-    news_feed = feedparser.parse(feed_url)
-    news_items = []
-    for entry in news_feed.entries[:7]:
-        published = datetime(*entry.published_parsed[:6]).strftime("%Y-%m-%d %H:%M")
-        news_items.append({
+def fetch_news(url):
+    feed = feedparser.parse(url)
+    news_data = []
+    for entry in feed.entries[:5]:  # ambil 5 berita terbaru saja
+        published_time = entry.get("published", "Unknown time")
+        summary = entry.get('summary', 'No summary available')[:300] + "..."
+        news_data.append({
             "title": entry.title,
             "link": entry.link,
-            "published": published,
-            "summary": entry.summary[:300] + "..."
+            "published": published_time,
+            "summary": summary
         })
-    return news_items
+    return news_data
+
 
 # Crypto price fetcher
 def get_crypto_prices():
