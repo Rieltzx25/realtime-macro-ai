@@ -29,11 +29,12 @@ def fetch_news():
         feed = feedparser.parse(url)
         for entry in feed.entries:
             if any(keyword.lower() in entry.title.lower() or keyword.lower() in entry.get('summary', '').lower() for keyword in KEYWORDS):
+                published_time = entry.get('published', 'N/A')
                 news_data.append({
                     "source": source,
                     "title": entry.title,
                     "link": entry.link,
-                    "published": entry.get('published', 'N/A'),
+                    "published": published_time,
                     "summary": entry.get('summary', 'No summary available.')[:250] + "..."
                 })
     news_data.sort(key=lambda x: x['published'], reverse=True)
@@ -47,25 +48,44 @@ def get_crypto_prices():
         data = {'bitcoin': {'usd': 'N/A'}, 'ethereum': {'usd': 'N/A'}, 'solana': {'usd': 'N/A'}}
     return data
 
+# Streamlit app layout
+st.set_page_config(page_title="Realtime Macro & Crypto Dashboard", layout="wide")
+st.title("🌐 Realtime Macro & Crypto Dashboard")
+
 news_placeholder = st.empty()
 
+# Auto refresh tiap 15 detik
 while True:
-    news_data = fetch_news()
-    crypto_prices = get_crypto_prices()
+    news_data = []
+    for source, url in RSS_FEEDS.items():
+        feed = feedparser.parse(url)
+        for entry in feed.entries:
+            if any(keyword.lower() in entry.title.lower() or keyword.lower() in entry.get('summary', '').lower() for keyword in KEYWORDS):
+                news_data.append({
+                    "source": source,
+                    "title": entry.title,
+                    "link": entry.link,
+                    "published": entry.get('published', 'N/A'),
+                    "summary": entry.get('summary', 'No summary available.')[:250] + "..."
+                })
 
-    with news_placeholder.container():
-        st.subheader("📰 Berita Ekonomi Makro & Crypto Terbaru")
-        for news in news_data[:20]:  # 20 berita terbaru
-            st.markdown(f"**[{news['title']}]({news['link']})**")
-            st.caption(f"📌 {news['source']} | 🕒 {news['published']}")
-            st.write(f"> {news['summary']}")
-            st.divider()
+    news_data.sort(key=lambda x: x['published'], reverse=True)
 
-        st.sidebar.title("Crypto Market 📈")
-        st.sidebar.metric("Bitcoin (BTC)", f"${crypto_prices['bitcoin']['usd']}")
-        st.sidebar.metric("Ethereum (ETH)", f"${crypto_prices['ethereum']['usd']}")
-        st.sidebar.metric("Solana (SOL)", f"${crypto_prices['solana']['usd']}")
+    crypto_prices = requests.get("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd").json()
 
-        st.info("🔄 **Update otomatis setiap 60 detik.**")
-    
-    time.sleep(60)  # refresh setiap 60 detik
+    st.subheader("📰 Berita Ekonomi & Crypto Terbaru")
+    for news in news_data[:20]:  # Menampilkan 20 berita terbaru
+        st.markdown(f"**[{news['title']}]({news['link']})**")
+        st.caption(f"📌 {news['source']} | 🕒 {news['published']}")
+        st.write(f"> {news['summary']}")
+        st.divider()
+
+    # Sidebar untuk harga crypto
+    st.sidebar.title("Crypto Market 📈")
+    st.sidebar.metric("Bitcoin (BTC)", f"${crypto_prices['bitcoin']['usd']}")
+    st.sidebar.metric("Ethereum (ETH)", f"${crypto_prices['ethereum']['usd']}")
+    st.sidebar.metric("Solana (SOL)", f"${crypto_prices['solana']['usd']}")
+
+    st.info("🔄 **Update otomatis setiap 15 detik.**")
+
+    time.sleep(15)
