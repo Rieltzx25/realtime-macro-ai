@@ -111,4 +111,4 @@ for news in other_news:
 
 # Refresh otomatis tiap 15 detik
 import time
-count = st_autorefresh(interval=15_000, limit=None, key="news_refresher")
+count = st_autorefresh(interval=30_000, limit=None, key="news_refresher")
