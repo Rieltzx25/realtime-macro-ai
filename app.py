@@ -3,35 +3,9 @@ import feedparser
 import requests
 import pandas as pd
 from datetime import datetime
+import pytz
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
-
-# CSS Animasi dan gaya tambahan
-st.markdown("""
-<style>
-@keyframes fadeIn {
-    from {opacity: 0; transform: translateY(20px);}
-    to {opacity: 1; transform: translateY(0);}
-}
-
-.headline {
-    font-size: 24px;
-    font-weight: bold;
-    animation: fadeIn 1s ease-in-out;
-}
-
-.news-item {
-    padding: 10px;
-    border-radius: 5px;
-    transition: transform 0.3s ease;
-}
-
-.news-item:hover {
-    transform: scale(1.03);
-    background-color: #f1f1f1;
-}
-</style>
-""", unsafe_allow_html=True)
 
 # Fungsi ambil berita dari RSS
 def fetch_news(url, max_entries=5):
@@ -39,7 +13,7 @@ def fetch_news(url, max_entries=5):
     news_data = []
     for entry in feed.entries[:max_entries]:
         summary = entry.summary[:300] + "..." if hasattr(entry, 'summary') else ""
-        published = entry.get("published", datetime.now().strftime("%a, %d %b %Y %H:%M:%S GMT"))
+        published = entry.get("published", "")
         news_data.append({
             "title": entry.title,
             "link": entry.link,
@@ -57,26 +31,45 @@ def get_crypto_prices():
 
 # RSS Feeds (makroekonomi & crypto)
 RSS_FEEDS = {
+    "NEWEST": [
+        "https://www.cnbc.com/id/20910258/device/rss/rss.html",
+        "https://www.cnbc.com/id/10000664/device/rss/rss.html",
+        "https://www.reutersagency.com/feed/?best-topics=business-finance",
+        "https://www.reutersagency.com/feed/?best-topics=markets",
+        "https://www.investing.com/rss/news_14.rss",
+        "https://www.investing.com/rss/news_301.rss",
+        "https://feeds.marketwatch.com/marketwatch/topstories/",
+        "https://www.bloomberg.com/feed/podcast/bloomberg-surveillance.xml",
+        "https://www.ft.com/?format=rss",
+        "https://www.coindesk.com/arc/outboundfeeds/rss/",
+        "https://cointelegraph.com/rss",
+        "https://finance.yahoo.com/news/rssindex",
+        "https://cryptoslate.com/feed/",
+        "https://bitcoinmagazine.com/.rss/full/",
+        "https://www.newsbtc.com/feed/",
+        "https://cryptopotato.com/feed/"
+    ],
     "CNBC Economy": "https://www.cnbc.com/id/20910258/device/rss/rss.html",
     "CNBC Finance": "https://www.cnbc.com/id/10000664/device/rss/rss.html",
+    "Reuters Business": "https://www.reutersagency.com/feed/?best-topics=business-finance",
+    "Reuters Markets": "https://www.reutersagency.com/feed/?best-topics=markets",
     "Investing.com Economy": "https://www.investing.com/rss/news_14.rss",
     "Investing.com Crypto": "https://www.investing.com/rss/news_301.rss",
     "MarketWatch": "https://feeds.marketwatch.com/marketwatch/topstories/",
     "CoinDesk": "https://www.coindesk.com/arc/outboundfeeds/rss/",
     "Cointelegraph": "https://cointelegraph.com/rss",
-    "Yahoo Finance": "https://finance.yahoo.com/news/rssindex",
-    "CryptoSlate": "https://cryptoslate.com/feed/",
-    "Bitcoin Magazine": "https://bitcoinmagazine.com/.rss/full/",
-    "NewsBTC": "https://www.newsbtc.com/feed/",
-    "CryptoPotato": "https://cryptopotato.com/feed/"
+    "Yahoo Finance": "https://finance.yahoo.com/news/rssindex"
 }
 
 # Judul
 st.title("🚀 Realtime Macro & Crypto Dashboard")
 
+# Sidebar untuk navigasi sumber berita
+feed_choice = st.sidebar.selectbox("Pilih sumber berita", list(RSS_FEEDS.keys()))
+
 # Crypto Prices
 crypto_prices = get_crypto_prices()
-st.subheader("📊 Live Crypto Prices")
+st.subheader("Live Crypto Prices")
 
 prices_df = pd.DataFrame({
     'Crypto': ['Bitcoin (BTC)', 'Ethereum (ETH)', 'Solana (SOL)'],
@@ -90,23 +83,33 @@ prices_df = pd.DataFrame({
 st.table(prices_df.style.format({"Price (USD)": "${:,.2f}", "24h Change (%)": "{:.2f}%"}))
 st.info('🔄 Data refreshes automatically every 15 seconds.')
 
-# Berita terbaru otomatis
-all_news = []
-for source, url in RSS_FEEDS.items():
-    all_news.extend(fetch_news(url, 3))
+# Berita terbaru
+st.subheader(f"🔥 Berita Terbaru - {feed_choice}")
 
-# Urutkan berita berdasarkan waktu publikasi
-all_news.sort(key=lambda x: x['published'], reverse=True)
+# Zona waktu WIB
+wib = pytz.timezone('Asia/Jakarta')
 
-# Berita utama terbaru (headline besar)
-st.markdown(f"<div class='headline'>🔥 {all_news[0]['title']} [{all_news[0]['published']}]</div>", unsafe_allow_html=True)
-st.write(f"{all_news[0]['summary']} [Read more]({all_news[0]['link']})")
-st.divider()
+if feed_choice == "NEWEST":
+    all_news = []
+    for feed_url in RSS_FEEDS["NEWEST"]:
+        all_news.extend(fetch_news(feed_url, 2))
+    all_news.sort(key=lambda x: x['published'], reverse=True)
+    top_news = all_news[:1][0]
+    other_news = all_news[1:6]
+else:
+    news_items = fetch_news(RSS_FEEDS[feed_choice], 5)
+    top_news = news_items[0]
+    other_news = news_items[1:]
 
-# Tampilkan berita lainnya
-st.subheader("📰 Berita Terbaru Lainnya")
-for news in all_news[1:10]:
-    st.markdown(f"<div class='news-item'>🔹 [{news['title']}]({news['link']}) <br><small>{news['published']}</small><br>{news['summary']}</div>", unsafe_allow_html=True)
+st.markdown(f"### [{top_news['title']}]({top_news['link']})")
+st.caption(datetime.now(wib).strftime('%A, %d %B %Y %H:%M WIB'))
+st.write(top_news['summary'])
+st.markdown("---")
 
-# Informasi waktu update
-st.sidebar.markdown(f"⏰ Last updated: {datetime.now().strftime('%a, %d %b %Y %H:%M:%S')}")
+for news in other_news:
+    st.markdown(f"- [{news['title']}]({news['link']}) ({news['published']})")
+
+# Refresh otomatis tiap 15 detik
+import time
+time.sleep(15)
+st.experimental_rerun()
