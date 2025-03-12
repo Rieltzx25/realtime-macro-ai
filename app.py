@@ -111,5 +111,5 @@ for news in other_news:
 
 # Refresh otomatis tiap 15 detik
 import time
-time.sleep(5)
+time.sleep(15)
 st.experimental_rerun()
