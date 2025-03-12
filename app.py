@@ -111,5 +111,5 @@ for news in other_news:
     st.markdown(f"- [{news['title']}]({news['link']}) ({news['published']})")
 
 # Refresh otomatis tiap 15 detik
-import time
+
 count = st_autorefresh(interval=15_000, limit=None, key="news_refresher")
