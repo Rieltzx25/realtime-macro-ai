@@ -6,13 +6,40 @@ from datetime import datetime
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
+# CSS Animasi dan gaya tambahan
+st.markdown("""
+<style>
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+.headline {
+    font-size: 24px;
+    font-weight: bold;
+    animation: fadeIn 1s ease-in-out;
+}
+
+.news-item {
+    padding: 10px;
+    border-radius: 5px;
+    transition: transform 0.3s ease;
+}
+
+.news-item:hover {
+    transform: scale(1.03);
+    background-color: #f1f1f1;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Fungsi ambil berita dari RSS
 def fetch_news(url, max_entries=5):
     feed = feedparser.parse(url)
     news_data = []
     for entry in feed.entries[:max_entries]:
-        summary = entry.summary[:300] + "..." if hasattr(entry, 'summary') else "Tidak ada ringkasan."
-        published = entry.get("published", "Tidak ada tanggal")
+        summary = entry.summary[:300] + "..." if hasattr(entry, 'summary') else ""
+        published = entry.get("published", datetime.now().strftime("%a, %d %b %Y %H:%M:%S GMT"))
         news_data.append({
             "title": entry.title,
             "link": entry.link,
@@ -32,13 +59,9 @@ def get_crypto_prices():
 RSS_FEEDS = {
     "CNBC Economy": "https://www.cnbc.com/id/20910258/device/rss/rss.html",
     "CNBC Finance": "https://www.cnbc.com/id/10000664/device/rss/rss.html",
-    "Reuters Business": "https://www.reutersagency.com/feed/?best-topics=business-finance",
-    "Reuters Markets": "https://www.reutersagency.com/feed/?best-topics=markets",
     "Investing.com Economy": "https://www.investing.com/rss/news_14.rss",
     "Investing.com Crypto": "https://www.investing.com/rss/news_301.rss",
     "MarketWatch": "https://feeds.marketwatch.com/marketwatch/topstories/",
-    "Bloomberg Markets": "https://www.bloomberg.com/feed/podcast/bloomberg-surveillance.xml",
-    "Financial Times": "https://www.ft.com/?format=rss",
     "CoinDesk": "https://www.coindesk.com/arc/outboundfeeds/rss/",
     "Cointelegraph": "https://cointelegraph.com/rss",
     "Yahoo Finance": "https://finance.yahoo.com/news/rssindex",
@@ -53,7 +76,7 @@ st.title("🚀 Realtime Macro & Crypto Dashboard")
 
 # Crypto Prices
 crypto_prices = get_crypto_prices()
-st.subheader("📈 Live Crypto Prices")
+st.subheader("📊 Live Crypto Prices")
 
 prices_df = pd.DataFrame({
     'Crypto': ['Bitcoin (BTC)', 'Ethereum (ETH)', 'Solana (SOL)'],
@@ -67,30 +90,23 @@ prices_df = pd.DataFrame({
 st.table(prices_df.style.format({"Price (USD)": "${:,.2f}", "24h Change (%)": "{:.2f}%"}))
 st.info('🔄 Data refreshes automatically every 15 seconds.')
 
-# Sidebar untuk memilih sumber berita
-st.sidebar.header("📰 Pilih sumber berita")
-selected_feed = st.sidebar.selectbox("Sumber Berita:", RSS_FEEDS.keys())
+# Berita terbaru otomatis
+all_news = []
+for source, url in RSS_FEEDS.items():
+    all_news.extend(fetch_news(url, 3))
 
-# Tampilkan berita terbaru
-def display_news(selected_feed):
-    news_items = fetch_news(RSS_FEEDS[selected_feed], 5)
-    st.subheader(f"🗞️ Berita Terkini - {selected_feed}")
-    for item in news_items:
-        with st.expander(f"{item['title']} [{item['published']}]", expanded=False):
-            st.write(item['summary'])
-            st.markdown(f"[Baca selengkapnya disini]({item['link']})")
+# Urutkan berita berdasarkan waktu publikasi
+all_news.sort(key=lambda x: x['published'], reverse=True)
 
-# Tampilkan berita
-display_news(selected_feed)
+# Berita utama terbaru (headline besar)
+st.markdown(f"<div class='headline'>🔥 {all_news[0]['title']} [{all_news[0]['published']}]</div>", unsafe_allow_html=True)
+st.write(f"{all_news[0]['summary']} [Read more]({all_news[0]['link']})")
+st.divider()
+
+# Tampilkan berita lainnya
+st.subheader("📰 Berita Terbaru Lainnya")
+for news in all_news[1:10]:
+    st.markdown(f"<div class='news-item'>🔹 [{news['title']}]({news['link']}) <br><small>{news['published']}</small><br>{news['summary']}</div>", unsafe_allow_html=True)
 
 # Informasi waktu update
-st.sidebar.write("📅", datetime.now().strftime("%A, %d %B %Y"))
-st.sidebar.write("⏰", datetime.now().strftime("%H:%M:%S"))
-st.sidebar.info("🔃 Halaman diperbarui otomatis setiap 15 detik.")
-
-# Auto-refresh setiap 15 detik
-import time
-
-with st.empty():
-    time.sleep(15)
-    st.experimental_rerun()
+st.sidebar.markdown(f"⏰ Last updated: {datetime.now().strftime('%a, %d %b %Y %H:%M:%S')}")
