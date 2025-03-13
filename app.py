@@ -5,55 +5,43 @@ import pandas as pd
 import time
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
-from urllib.parse import parse_qs
 
-# Menghilangkan sidebar default
-st.set_page_config(page_title="Bloomberg Style Dashboard", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
-# -----------------------------
-# 1) Daftar feed
-# -----------------------------
-RSS_FEEDS = {
-    "NEWEST": [
-        "https://www.cnbc.com/id/20910258/device/rss/rss.html",
-        "https://www.cnbc.com/id/10000664/device/rss/rss.html",
-        "https://www.reutersagency.com/feed/?best-topics=business-finance",
-        # Tambahkan feed lainnya...
-        "https://coinvestasi.com/feed"
-    ],
-    "Coinvestasi": "https://coinvestasi.com/feed",
-    "Reuters": "https://www.reutersagency.com/feed/?best-topics=markets",
-}
-
-# -----------------------------
-# 2) Fungsi fetch data
-# -----------------------------
+# --------------------------------------
+# Fungsi ambil berita dari RSS (User-Agent)
+# --------------------------------------
 def fetch_news(url, max_entries=5):
-    r = requests.get(url, headers={"User-Agent":"Mozilla/5.0"}, timeout=10)
-    if r.status_code != 200:
+    resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+    if resp.status_code != 200:
         return []
-    parsed = feedparser.parse(r.text)
-    data = []
-    for entry in parsed.entries[:max_entries]:
-        # parse time
+    feed = feedparser.parse(resp.text)
+
+    news_data = []
+    for entry in feed.entries[:max_entries]:
+        # Waktu float agar bisa diurutkan
         if hasattr(entry, "published_parsed") and entry.published_parsed:
             published_time = time.mktime(entry.published_parsed)
         else:
             published_time = 0
+
         summary = entry.summary[:300] + "..." if hasattr(entry, 'summary') else ""
-        data.append({
+        news_data.append({
             "title": entry.title,
             "link": entry.link,
             "summary": summary,
             "published_time": published_time
         })
-    return data
+    return news_data
 
+# --------------------------------------
+# Fungsi ambil harga crypto
+# --------------------------------------
 def get_crypto_prices():
-    base = {
-        "bitcoin": {"usd":0, "usd_24h_change":0},
-        "ethereum": {"usd":0, "usd_24h_change":0},
-        "solana": {"usd":0, "usd_24h_change":0}
+    prices = {
+        "bitcoin": {"usd": 0, "usd_24h_change": 0},
+        "ethereum": {"usd": 0, "usd_24h_change": 0},
+        "solana": {"usd": 0, "usd_24h_change": 0}
     }
     url = (
         "https://api.coingecko.com/api/v3/simple/price"
@@ -62,250 +50,129 @@ def get_crypto_prices():
         "&include_24hr_change=true"
     )
     try:
-        resp = requests.get(url, timeout=5).json()
-        for coin in base:
-            if coin in resp:
-                base[coin]["usd"] = resp[coin].get("usd",0)
-                base[coin]["usd_24h_change"] = resp[coin].get("usd_24h_change",0)
-    except:
-        pass
-    return base
+        r = requests.get(url, timeout=5).json()
+        for coin in prices:
+            if coin in r:
+                prices[coin]["usd"] = r[coin].get("usd", 0)
+                prices[coin]["usd_24h_change"] = r[coin].get("usd_24h_change", 0)
+    except Exception as e:
+        print("CoinGecko API error:", e)
+    return prices
 
-# -----------------------------
-# 3) Ambil feed_choice dari URL param
-# -----------------------------
-query_params = st.experimental_get_query_params()
-feed_choice = query_params.get("feed", ["NEWEST"])[0]
-# Pastikan valid
-if feed_choice not in RSS_FEEDS:
-    feed_choice = "NEWEST"
+# --------------------------------------
+# RSS Feeds
+# --------------------------------------
+RSS_FEEDS = {
+    "NEWEST": [
+        "https://www.cnbc.com/id/20910258/device/rss/rss.html",
+        "https://www.cnbc.com/id/10000664/device/rss/rss.html",
+        "https://www.reutersagency.com/feed/?best-topics=business-finance",
+        "https://www.reutersagency.com/feed/?best-topics=markets",
+        "https://www.investing.com/rss/news_14.rss",
+        "https://www.investing.com/rss/news_301.rss",
+        "https://feeds.marketwatch.com/marketwatch/topstories/",
+        "https://www.bloomberg.com/feed/podcast/bloomberg-surveillance.xml",
+        "https://www.ft.com/?format=rss",
+        "https://www.coindesk.com/arc/outboundfeeds/rss/",
+        "https://cointelegraph.com/rss",
+        "https://finance.yahoo.com/news/rssindex",
+        "https://cryptoslate.com/feed/",
+        "https://bitcoinmagazine.com/.rss/full/",
+        "https://www.newsbtc.com/feed/",
+        "https://cryptopotato.com/feed/",
+        "https://coinvestasi.com/feed"
+    ],
+    "CNBC Economy": "https://www.cnbc.com/id/20910258/device/rss/rss.html",
+    "CNBC Finance": "https://www.cnbc.com/id/10000664/device/rss/rss.html",
+    "Reuters Business": "https://www.reutersagency.com/feed/?best-topics=business-finance",
+    "Reuters Markets": "https://www.reutersagency.com/feed/?best-topics=markets",
+    "Investing.com Economy": "https://www.investing.com/rss/news_14.rss",
+    "Investing.com Crypto": "https://www.investing.com/rss/news_301.rss",
+    "MarketWatch": "https://feeds.marketwatch.com/marketwatch/topstories/",
+    "CoinDesk": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+    "Cointelegraph": "https://cointelegraph.com/rss",
+    "Yahoo Finance": "https://finance.yahoo.com/news/rssindex",
+    "Coinvestasi": "https://coinvestasi.com/feed"
+}
 
-# -----------------------------
-# 4) Ambil data feed
-# -----------------------------
-if isinstance(RSS_FEEDS[feed_choice], list):
-    # "NEWEST"
-    all_news = []
-    for feed_url in RSS_FEEDS[feed_choice]:
-        all_news.extend(fetch_news(feed_url, 3))  # fetch 3 per feed
-    all_news.sort(key=lambda x: x["published_time"], reverse=True)
-else:
-    # single feed
-    all_news = fetch_news(RSS_FEEDS[feed_choice], 10)
-    all_news.sort(key=lambda x: x["published_time"], reverse=True)
+# --------------------------------------
+# Judul
+# --------------------------------------
+st.title("🚀 Realtime Macro & Crypto Dashboard")
 
-news_show = all_news[:10]  # 10 item
+# Sidebar
+feed_choice = st.sidebar.selectbox("Pilih sumber berita", list(RSS_FEEDS.keys()))
 
-# -----------------------------
-# 5) Ambil data crypto
-# -----------------------------
+# --------------------------------------
+# Harga Crypto
+# --------------------------------------
 crypto_prices = get_crypto_prices()
+st.subheader("Live Crypto Prices")
 
-# -----------------------------
-# 6) Generate HTML bergaya
-# -----------------------------
-html_head = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<title>Bloomberg Style Dashboard</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: Consolas, 'Courier New', monospace;
-    background-color: #191919;
-    color: #E6E6E6;
-    height: 100vh;
-    display: flex; flex-direction: column;
-  }
-  header {
-    background-color:#333;
-    padding: 12px 20px;
-    display: flex;
-    justify-content:space-between;
-    align-items:center;
-  }
-  header .logo {
-    color:#FFD100; 
-    font-size:1.2rem;
-    text-transform: uppercase;
-  }
-  header .menu a {
-    color: #E6E6E6; 
-    text-decoration: none; 
-    margin-left:20px;
-  }
-  /* feed dropdown di top bar */
-  .feed-select {
-    background-color:#555; 
-    color:#E6E6E6; 
-    border:none;
-    padding:4px;
-    font-family: inherit;
-  }
-  .container {
-    flex:1; display:flex; 
-    height:calc(100vh - 50px);
-  }
-  aside {
-    width:280px; background-color:#1E1E1E; 
-    border-right:1px solid #333;
-    padding:20px;
-  }
-  aside h2 {
-    color:#FFD100; font-size:1rem; margin-bottom:10px;
-  }
-  .ticker { 
-    display:flex; justify-content:space-between; 
-    padding:4px 0;
-  }
-  .ticker .price-up { color:#00FF00; }
-  .ticker .price-down { color:#FF3333; }
+prices_df = pd.DataFrame({
+    'Crypto': ['Bitcoin (BTC)', 'Ethereum (ETH)', 'Solana (SOL)'],
+    'Price (USD)': [
+        crypto_prices['bitcoin']['usd'],
+        crypto_prices['ethereum']['usd'],
+        crypto_prices['solana']['usd']
+    ],
+    '24h Change (%)': [
+        crypto_prices['bitcoin']['usd_24h_change'],
+        crypto_prices['ethereum']['usd_24h_change'],
+        crypto_prices['solana']['usd_24h_change']
+    ]
+})
+st.table(prices_df.style.format({
+    "Price (USD)": "${:,.2f}",
+    "24h Change (%)": "{:.2f}%"
+}))
+st.info("🔄 Data refreshes automatically every 15 seconds.")
 
-  main {
-    flex:1; padding:20px; overflow-y:auto;
-  }
-  h2.section-title {
-    font-size:1.3rem; margin-bottom:10px; color:#FFD100;
-  }
-  .headline {
-    border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:10px;
-  }
-  .headline .time {
-    color:#AAAAAA; font-size:0.85rem; margin: 5px 0;
-  }
-  .headline a {
-    color:#62B0E8; text-decoration:none;
-  }
-  .news-list .news-item {
-    border-bottom:1px solid #333; margin-bottom:10px; padding-bottom:10px;
-  }
-  .news-item a {
-    color:#62B0E8; text-decoration:none;
-  }
-  .news-item a:hover { text-decoration:underline; }
-  .time-small {
-    color:#AAAAAA; font-size:0.85rem;
-  }
+# --------------------------------------
+# Berita Terbaru
+# --------------------------------------
+st.subheader(f"🔥 Berita Terbaru - {feed_choice}")
 
-  /* scrollbar */
-  ::-webkit-scrollbar{ width:8px; }
-  ::-webkit-scrollbar-thumb{ background:#333; }
-  ::-webkit-scrollbar-track{ background:#1E1E1E; }
-</style>
-</head>
-<body>
-"""
+def display_news_items(news_list):
+    if not news_list:
+        st.write("Tidak ada berita.")
+        return
 
-html_topbar = f"""
-<header>
-  <div class="logo">My Terminal</div>
-  <div class="menu">
-    <select class="feed-select" onchange="location.href='?feed='+this.value">
-"""
+    # HEADLINE = news teratas
+    top_news = news_list[0]
+    st.markdown(f"### {top_news['title']}")
+    st.markdown(f"[Baca selengkapnya]({top_news['link']})")
 
-# Buat <option> feed
-options_html = ""
-for k in RSS_FEEDS.keys():
-    selected = "selected" if k == feed_choice else ""
-    options_html += f'<option value="{k}" {selected}>{k}</option>'
+    dt_top = datetime.fromtimestamp(top_news["published_time"])
+    st.caption(dt_top.strftime("%a, %d %b %Y %H:%M:%S UTC"))
+    st.write(top_news['summary'])
+    st.markdown("---")
 
-html_topbar2 = f"""
-    </select>
-    <a href="#">Markets</a>
-    <a href="#">Crypto</a>
-    <a href="#">Macro</a>
-  </div>
-</header>
-"""
+    # Tampilkan 9 berita sisanya
+    for item in news_list[1:10]:  # 9 item
+        dt_item = datetime.fromtimestamp(item["published_time"])
+        st.markdown(f"- **{item['title']}**")
+        st.caption(dt_item.strftime("%a, %d %b %Y %H:%M:%S UTC"))
+        st.write(item['summary'])
+        st.markdown(f"[Link]({item['link']})\n")
 
-html_container_start = """
-<div class="container">
-  <aside>
-    <h2>Watchlist</h2>
-"""
+if feed_choice == "NEWEST":
+    all_news = []
+    # Untuk mendapat total 10, kita fetch 3 per feed (atau 5) -> tapi cenderung berlebih
+    # Sederhana: max_entries=3 agar total lebih banyak
+    for feed_url in RSS_FEEDS["NEWEST"]:
+        all_news.extend(fetch_news(feed_url, max_entries=3))
 
-html_container_end = """
-  </aside>
-  <main>
-    <h2 class="section-title">Headline & Latest News</h2>
-"""
-
-html_footer = """
-  </main>
-</div>
-</body>
-</html>
-"""
-
-# watchlist
-def format_watchlist(label, price, change):
-    if change >= 0:
-        return f"""
-        <div class="ticker">
-          <span>{label}</span>
-          <span class="price-up">{price:.2f}</span>
-        </div>
-        """
-    else:
-        return f"""
-        <div class="ticker">
-          <span>{label}</span>
-          <span class="price-down">{price:.2f}</span>
-        </div>
-        """
-
-watchlist_html = (
-    format_watchlist("BTC/USD", crypto_prices["bitcoin"]["usd"], crypto_prices["bitcoin"]["usd_24h_change"]) +
-    format_watchlist("ETH/USD", crypto_prices["ethereum"]["usd"], crypto_prices["ethereum"]["usd_24h_change"]) +
-    format_watchlist("SOL/USD", crypto_prices["solana"]["usd"], crypto_prices["solana"]["usd_24h_change"])
-)
-
-# HEADLINE + 9 BERITA
-news_html = ""
-if news_show:
-    # HEADLINE
-    headline = news_show[0]
-    dt_head = datetime.fromtimestamp(headline["published_time"]).strftime("%a, %d %b %Y %H:%M:%S UTC")
-
-    news_html += f"""
-    <div class="headline">
-      <div class="time">{dt_head}</div>
-      <a href="{headline['link']}" target="_blank"><strong>{headline['title']}</strong></a>
-      <p>{headline['summary']}</p>
-    </div>
-    <div class="news-list">
-    """
-
-    for item in news_show[1:10]:
-        dt_item = datetime.fromtimestamp(item["published_time"]).strftime("%a, %d %b %Y %H:%M:%S UTC")
-        news_html += f"""
-        <div class="news-item">
-          <div class="time-small">{dt_item}</div>
-          <a href="{item['link']}" target="_blank"><strong>{item['title']}</strong></a>
-          <p>{item['summary']}</p>
-        </div>
-        """
-    news_html += "</div>"
+    # Urutkan menurun
+    all_news.sort(key=lambda x: x["published_time"], reverse=True)
+    display_news_items(all_news)
 else:
-    news_html += "<p>No news available.</p>"
+    # Single feed: fetch 10
+    news_items = fetch_news(RSS_FEEDS[feed_choice], max_entries=10)
+    news_items.sort(key=lambda x: x["published_time"], reverse=True)
+    display_news_items(news_items)
 
-# Susun final HTML
-final_html = (
-    html_head
-    + html_topbar
-    + options_html
-    + html_topbar2
-    + html_container_start
-    + watchlist_html
-    + html_container_end
-    + news_html
-    + html_footer
-)
-
-# Tampilkan
-st.components.v1.html(final_html, height=800, scrolling=True)
-
+# --------------------------------------
 # Auto-refresh 15 detik
-st_autorefresh(interval=15_000, limit=None, key="bbg_refresher")
+# --------------------------------------
+st_autorefresh(interval=15_000, limit=None, key="news_refresher")
