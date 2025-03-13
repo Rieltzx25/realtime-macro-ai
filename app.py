@@ -6,12 +6,14 @@ import time
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
-st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
+st.set_page_config(page_title="Bloomberg-Style Macro & Crypto Dashboard", layout="wide")
 
 # --------------------------------------
-# Fungsi ambil berita dari RSS (User-Agent)
+# 1) Fungsi fetch data (berita + crypto)
 # --------------------------------------
+
 def fetch_news(url, max_entries=5):
+    # Gunakan user-agent
     resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
     if resp.status_code != 200:
         return []
@@ -19,12 +21,10 @@ def fetch_news(url, max_entries=5):
 
     news_data = []
     for entry in feed.entries[:max_entries]:
-        # Waktu float agar bisa diurutkan
         if hasattr(entry, "published_parsed") and entry.published_parsed:
             published_time = time.mktime(entry.published_parsed)
         else:
             published_time = 0
-
         summary = entry.summary[:300] + "..." if hasattr(entry, 'summary') else ""
         news_data.append({
             "title": entry.title,
@@ -34,9 +34,6 @@ def fetch_news(url, max_entries=5):
         })
     return news_data
 
-# --------------------------------------
-# Fungsi ambil harga crypto
-# --------------------------------------
 def get_crypto_prices():
     prices = {
         "bitcoin": {"usd": 0, "usd_24h_change": 0},
@@ -60,7 +57,7 @@ def get_crypto_prices():
     return prices
 
 # --------------------------------------
-# RSS Feeds
+# 2) Daftar RSS feed
 # --------------------------------------
 RSS_FEEDS = {
     "NEWEST": [
@@ -82,97 +79,242 @@ RSS_FEEDS = {
         "https://cryptopotato.com/feed/",
         "https://coinvestasi.com/feed"
     ],
-    "CNBC Economy": "https://www.cnbc.com/id/20910258/device/rss/rss.html",
-    "CNBC Finance": "https://www.cnbc.com/id/10000664/device/rss/rss.html",
-    "Reuters Business": "https://www.reutersagency.com/feed/?best-topics=business-finance",
-    "Reuters Markets": "https://www.reutersagency.com/feed/?best-topics=markets",
-    "Investing.com Economy": "https://www.investing.com/rss/news_14.rss",
-    "Investing.com Crypto": "https://www.investing.com/rss/news_301.rss",
-    "MarketWatch": "https://feeds.marketwatch.com/marketwatch/topstories/",
-    "CoinDesk": "https://www.coindesk.com/arc/outboundfeeds/rss/",
-    "Cointelegraph": "https://cointelegraph.com/rss",
-    "Yahoo Finance": "https://finance.yahoo.com/news/rssindex",
     "Coinvestasi": "https://coinvestasi.com/feed"
+    # Anda bisa tambahkan feed lain di sini
 }
 
 # --------------------------------------
-# Judul
+# 3) Pilih feed & fetch data
 # --------------------------------------
-st.title("🚀 Realtime Macro & Crypto Dashboard")
-
-# Sidebar
 feed_choice = st.sidebar.selectbox("Pilih sumber berita", list(RSS_FEEDS.keys()))
-
-# --------------------------------------
-# Harga Crypto
-# --------------------------------------
-crypto_prices = get_crypto_prices()
-st.subheader("Live Crypto Prices")
-
-prices_df = pd.DataFrame({
-    'Crypto': ['Bitcoin (BTC)', 'Ethereum (ETH)', 'Solana (SOL)'],
-    'Price (USD)': [
-        crypto_prices['bitcoin']['usd'],
-        crypto_prices['ethereum']['usd'],
-        crypto_prices['solana']['usd']
-    ],
-    '24h Change (%)': [
-        crypto_prices['bitcoin']['usd_24h_change'],
-        crypto_prices['ethereum']['usd_24h_change'],
-        crypto_prices['solana']['usd_24h_change']
-    ]
-})
-st.table(prices_df.style.format({
-    "Price (USD)": "${:,.2f}",
-    "24h Change (%)": "{:.2f}%"
-}))
-st.info("🔄 Data refreshes automatically every 15 seconds.")
-
-# --------------------------------------
-# Berita Terbaru
-# --------------------------------------
-st.subheader(f"🔥 Berita Terbaru - {feed_choice}")
-
-def display_news_items(news_list):
-    if not news_list:
-        st.write("Tidak ada berita.")
-        return
-
-    # HEADLINE = news teratas
-    top_news = news_list[0]
-    st.markdown(f"### {top_news['title']}")
-    st.markdown(f"[Baca selengkapnya]({top_news['link']})")
-
-    dt_top = datetime.fromtimestamp(top_news["published_time"])
-    st.caption(dt_top.strftime("%a, %d %b %Y %H:%M:%S UTC"))
-    st.write(top_news['summary'])
-    st.markdown("---")
-
-    # Tampilkan 9 berita sisanya
-    for item in news_list[1:10]:  # 9 item
-        dt_item = datetime.fromtimestamp(item["published_time"])
-        st.markdown(f"- **{item['title']}**")
-        st.caption(dt_item.strftime("%a, %d %b %Y %H:%M:%S UTC"))
-        st.write(item['summary'])
-        st.markdown(f"[Link]({item['link']})\n")
-
 if feed_choice == "NEWEST":
     all_news = []
-    # Untuk mendapat total 10, kita fetch 3 per feed (atau 5) -> tapi cenderung berlebih
-    # Sederhana: max_entries=3 agar total lebih banyak
     for feed_url in RSS_FEEDS["NEWEST"]:
-        all_news.extend(fetch_news(feed_url, max_entries=3))
-
-    # Urutkan menurun
+        all_news.extend(fetch_news(feed_url, max_entries=2))
+    # urutkan menurun
     all_news.sort(key=lambda x: x["published_time"], reverse=True)
-    display_news_items(all_news)
 else:
-    # Single feed: fetch 10
-    news_items = fetch_news(RSS_FEEDS[feed_choice], max_entries=10)
-    news_items.sort(key=lambda x: x["published_time"], reverse=True)
-    display_news_items(news_items)
+    all_news = fetch_news(RSS_FEEDS[feed_choice], max_entries=10)
+    all_news.sort(key=lambda x: x["published_time"], reverse=True)
+
+# Ambil 10 berita teratas
+news_to_show = all_news[:10]
+
+# Ambil data harga crypto
+crypto_prices = get_crypto_prices()
 
 # --------------------------------------
-# Auto-refresh 15 detik
+# 4) Buat HTML bergaya Bloomberg
+# --------------------------------------
+html_head = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Bloomberg-Style Dashboard</title>
+  <style>
+    /* Reset & base */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Consolas, 'Courier New', monospace;
+      background-color: #191919;
+      color: #E6E6E6;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background-color: #333;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      color: #FFD100; /* Kuning Bloomberg */
+      font-size: 1.2rem;
+    }
+    header nav a {
+      text-decoration: none;
+      color: #E6E6E6;
+      margin-left: 20px;
+    }
+    .container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 50px);
+    }
+    aside {
+      width: 280px;
+      background-color: #1E1E1E;
+      border-right: 1px solid #333;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    aside h2 {
+      color: #FFD100;
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+    .ticker {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+    .ticker span.price-up { color: #00FF00; }
+    .ticker span.price-down { color: #FF3333; }
+    main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    main h2.section-title {
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+      color: #FFD100;
+    }
+    .news-item {
+      border-bottom: 1px solid #333;
+      padding: 10px 0;
+    }
+    .news-item a {
+      color: #62B0E8;
+      text-decoration: none;
+    }
+    .news-item a:hover {
+      text-decoration: underline;
+    }
+    .news-time {
+      color: #AAAAAA;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+    /* scroll */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1E1E1E;
+    }
+  </style>
+</head>
+<body>
+"""
+
+html_body_start = """
+<header>
+  <h1>My Terminal</h1>
+  <nav>
+    <a href="#">Markets</a>
+    <a href="#">Crypto</a>
+    <a href="#">Macro News</a>
+  </nav>
+</header>
+
+<div class="container">
+  <aside>
+    <h2>Watchlist</h2>
+"""
+
+html_body_end = """
+  </aside>
+  <main>
+    <h2 class="section-title">Headline & Latest News</h2>
+"""
+
+html_footer = """
+  </main>
+</div>
+</body>
+</html>
+"""
+
+# --------------------------------------
+# 5) Generate Watchlist (sidebar)
+# --------------------------------------
+# Contoh menampilkan 3 crypto
+btc_price = f"{crypto_prices['bitcoin']['usd']:.2f}"
+eth_price = f"{crypto_prices['ethereum']['usd']:.2f}"
+sol_price = f"{crypto_prices['solana']['usd']:.2f}"
+
+btc_change = crypto_prices['bitcoin']['usd_24h_change']
+eth_change = crypto_prices['ethereum']['usd_24h_change']
+sol_change = crypto_prices['solana']['usd_24h_change']
+
+def format_ticker_row(label, price, change):
+    if change >= 0:
+        return f"""
+        <div class="ticker">
+          <span>{label}</span>
+          <span class="price-up">{price}</span>
+        </div>
+        """
+    else:
+        return f"""
+        <div class="ticker">
+          <span>{label}</span>
+          <span class="price-down">{price}</span>
+        </div>
+        """
+
+watchlist_html = (
+    format_ticker_row("BTC/USD", btc_price, btc_change) +
+    format_ticker_row("ETH/USD", eth_price, eth_change) +
+    format_ticker_row("SOL/USD", sol_price, sol_change)
+)
+
+# --------------------------------------
+# 6) Generate News Section
+# --------------------------------------
+news_html = ""
+
+if len(news_to_show) > 0:
+    # HEADLINE
+    headline = news_to_show[0]
+    dt_head = datetime.fromtimestamp(headline["published_time"]).strftime("%a, %d %b %Y %H:%M:%S UTC")
+
+    news_html += f"""
+    <div class="news-item">
+      <div class="news-time">{dt_head}</div>
+      <a href="{headline['link']}" target="_blank"><strong>{headline['title']}</strong></a>
+      <p>{headline['summary']}</p>
+    </div>
+    """
+
+    # 9 Lainnya
+    for item in news_to_show[1:10]:
+        dt_item = datetime.fromtimestamp(item["published_time"]).strftime("%a, %d %b %Y %H:%M:%S UTC")
+        news_html += f"""
+        <div class="news-item">
+          <div class="news-time">{dt_item}</div>
+          <a href="{item['link']}" target="_blank"><strong>{item['title']}</strong></a>
+          <p>{item['summary']}</p>
+        </div>
+        """
+else:
+    news_html += "<p>No news available</p>"
+
+# --------------------------------------
+# 7) Susun HTML penuh
+# --------------------------------------
+final_html = (
+    html_head
+    + html_body_start
+    + watchlist_html
+    + html_body_end
+    + news_html
+    + html_footer
+)
+
+# --------------------------------------
+# 8) Tampilkan di Streamlit
+# --------------------------------------
+st.components.v1.html(final_html, height=800, scrolling=True)
+
+# --------------------------------------
+# 9) Auto-refresh tiap 15 detik
 # --------------------------------------
 st_autorefresh(interval=15_000, limit=None, key="news_refresher")
