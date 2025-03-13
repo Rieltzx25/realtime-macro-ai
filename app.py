@@ -60,7 +60,7 @@ def get_crypto_prices():
     return prices
 
 # --------------------------------------
-# RSS Feeds
+# Daftar RSS Feeds, plus dua item baru
 # --------------------------------------
 RSS_FEEDS = {
     "NEWEST": [
@@ -92,20 +92,21 @@ RSS_FEEDS = {
     "CoinDesk": "https://www.coindesk.com/arc/outboundfeeds/rss/",
     "Cointelegraph": "https://cointelegraph.com/rss",
     "Yahoo Finance": "https://finance.yahoo.com/news/rssindex",
-    "Coinvestasi": "https://coinvestasi.com/feed"
+    "Coinvestasi": "https://coinvestasi.com/feed",
+    # Dua item spesial (bukan feed RSS)
+    "Fear and Greed Index": None,
+    "Bitcoin Rainbow Chart": None
 }
 
 # --------------------------------------
-# Judul
+# Title
 # --------------------------------------
 st.title("🚀 Realtime Macro & Crypto Dashboard")
 
-# Sidebar
+# Sidebar: pilih sumber berita
 feed_choice = st.sidebar.selectbox("Pilih sumber berita", list(RSS_FEEDS.keys()))
 
-# --------------------------------------
 # Harga Crypto
-# --------------------------------------
 crypto_prices = get_crypto_prices()
 st.subheader("Live Crypto Prices")
 
@@ -126,13 +127,10 @@ st.table(prices_df.style.format({
     "Price (USD)": "${:,.2f}",
     "24h Change (%)": "{:.2f}%"
 }))
+
 st.info("🔄 Data refreshes automatically every 15 seconds.")
 
-# --------------------------------------
-# Berita Terbaru
-# --------------------------------------
-st.subheader(f"🔥 Berita Terbaru - {feed_choice}")
-
+# Fungsi tampil berita
 def display_news_items(news_list):
     if not news_list:
         st.write("Tidak ada berita.")
@@ -148,31 +146,44 @@ def display_news_items(news_list):
     st.write(top_news['summary'])
     st.markdown("---")
 
-    # Tampilkan 9 berita sisanya
-    for item in news_list[1:10]:  # 9 item
+    # 9 berita lain
+    for item in news_list[1:10]:
         dt_item = datetime.fromtimestamp(item["published_time"])
         st.markdown(f"- **{item['title']}**")
         st.caption(dt_item.strftime("%a, %d %b %Y %H:%M:%S UTC"))
         st.write(item['summary'])
         st.markdown(f"[Link]({item['link']})\n")
 
-if feed_choice == "NEWEST":
+# --------------------------------------
+# Tampilkan konten berdasar feed_choice
+# --------------------------------------
+if feed_choice == "Fear and Greed Index":
+    st.subheader("Fear and Greed Index")
+    # MISAL: Tampilkan iframe dari alternative.me
+    st.markdown("[**Lihat Fear & Greed Index**](https://alternative.me/crypto/fear-and-greed-index/)")
+    st.components.v1.iframe("https://alternative.me/crypto/fear-and-greed-index/", height=600, scrolling=True)
+
+elif feed_choice == "Bitcoin Rainbow Chart":
+    st.subheader("Bitcoin Rainbow Chart")
+    # MISAL: Tampilkan iframe dari blockchaincenter.net
+    st.markdown("[**Lihat Bitcoin Rainbow Chart**](https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/)")
+    st.components.v1.iframe("https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/", height=600, scrolling=True)
+
+elif feed_choice == "NEWEST":
+    # NEWEST feed => kita gabung feed
     all_news = []
-    # Untuk mendapat total 10, kita fetch 3 per feed (atau 5) -> tapi cenderung berlebih
-    # Sederhana: max_entries=3 agar total lebih banyak
     for feed_url in RSS_FEEDS["NEWEST"]:
         all_news.extend(fetch_news(feed_url, max_entries=3))
-
-    # Urutkan menurun
     all_news.sort(key=lambda x: x["published_time"], reverse=True)
+    st.subheader(f"🔥 Berita Terbaru - {feed_choice}")
     display_news_items(all_news)
 else:
     # Single feed: fetch 10
-    news_items = fetch_news(RSS_FEEDS[feed_choice], max_entries=10)
-    news_items.sort(key=lambda x: x["published_time"], reverse=True)
-    display_news_items(news_items)
+    feed_url = RSS_FEEDS[feed_choice]
+    all_news = fetch_news(feed_url, max_entries=10)
+    all_news.sort(key=lambda x: x["published_time"], reverse=True)
+    st.subheader(f"🔥 Berita Terbaru - {feed_choice}")
+    display_news_items(all_news)
 
-# --------------------------------------
 # Auto-refresh 15 detik
-# --------------------------------------
 st_autorefresh(interval=15_000, limit=None, key="news_refresher")
