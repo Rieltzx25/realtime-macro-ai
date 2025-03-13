@@ -3,7 +3,6 @@ import feedparser
 import requests
 import pandas as pd
 from datetime import datetime
-import pytz
 from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
@@ -16,6 +15,7 @@ def fetch_news(url, max_entries=5):
     news_data = []
     for entry in feed.entries[:max_entries]:
         summary = entry.summary[:300] + "..." if hasattr(entry, 'summary') else ""
+        # Pakai waktu feed, tanpa konversi ke lokal
         published = entry.get("published", "No published time")
         news_data.append({
             "title": entry.title,
@@ -40,7 +40,7 @@ def get_crypto_prices():
     url = f"https://api.coingecko.com/api/v3/simple/price?ids={ids}&vs_currencies=usd&include_24hr_change=true"
     try:
         response = requests.get(url, timeout=5).json()
-        for coin in prices.keys():
+        for coin in prices:
             if coin in response:
                 prices[coin]["usd"] = response[coin].get("usd", 0)
                 prices[coin]["usd_24h_change"] = response[coin].get("usd_24h_change", 0)
@@ -132,12 +132,11 @@ if feed_choice == "NEWEST":
     if len(all_news) > 0:
         top_news = all_news[0]
         other_news = all_news[1:6]
+
+        # Headline
         st.markdown(f"### [{top_news['title']}]({top_news['link']})")
-
-        # Tampilkan jam lokal WIB (opsional) atau jam feed
-        wib = pytz.timezone("Asia/Jakarta")
-        st.caption(datetime.now(wib).strftime('%A, %d %B %Y %H:%M WIB'))
-
+        # MENAMPILKAN WAKTU FEED
+        st.caption(top_news["published"])
         st.write(top_news['summary'])
         st.markdown("---")
 
@@ -151,12 +150,10 @@ else:
     if len(news_items) > 0:
         top_news = news_items[0]
         other_news = news_items[1:]
+
         st.markdown(f"### [{top_news['title']}]({top_news['link']})")
-
-        # Jam WIB (opsional)
-        wib = pytz.timezone("Asia/Jakarta")
-        st.caption(datetime.now(wib).strftime('%A, %d %B %Y %H:%M WIB'))
-
+        # MENAMPILKAN WAKTU FEED
+        st.caption(top_news["published"])
         st.write(top_news['summary'])
         st.markdown("---")
 
