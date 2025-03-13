@@ -157,4 +157,4 @@ else:
 # ------------------------------
 # Auto-refresh SELURUH Halaman per 1 detik
 # ------------------------------
-st_autorefresh(interval=1_000, limit=None, key="crypto_refresher")
+st_autorefresh(interval=15_000, limit=None, key="crypto_refresher")
