@@ -2,26 +2,39 @@ import streamlit as st
 import feedparser
 import requests
 import pandas as pd
+import time
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
 # ----------------------------------------------------------------
-# Fungsi ambil berita dari RSS
+# Fungsi ambil berita dari RSS (menyimpan published_time)
 # ----------------------------------------------------------------
 def fetch_news(url, max_entries=5):
-    feed = feedparser.parse(url)
+    # Gunakan user-agent agar tidak diblokir
+    resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+    if resp.status_code != 200:
+        return []
+    feed = feedparser.parse(resp.text)
+
     news_data = []
     for entry in feed.entries[:max_entries]:
+        # Published time (float) diambil dari feedparser (time.struct_time)
+        if hasattr(entry, "published_parsed") and entry.published_parsed:
+            published_time = time.mktime(entry.published_parsed)
+        else:
+            # Jika feed tidak punya published_parsed, fallback ke 0
+            published_time = 0
+
+        # Summaries
         summary = entry.summary[:300] + "..." if hasattr(entry, 'summary') else ""
-        # Pakai waktu feed, tanpa konversi ke lokal
-        published = entry.get("published", "No published time")
+
         news_data.append({
             "title": entry.title,
             "link": entry.link,
             "summary": summary,
-            "published": published
+            "published_time": published_time,
         })
     return news_data
 
@@ -29,21 +42,23 @@ def fetch_news(url, max_entries=5):
 # Fungsi ambil harga crypto (Coingecko) + error handling
 # ----------------------------------------------------------------
 def get_crypto_prices():
-    # Default data jika API tidak menyediakan data
     prices = {
         "bitcoin": {"usd": 0, "usd_24h_change": 0},
         "ethereum": {"usd": 0, "usd_24h_change": 0},
         "solana": {"usd": 0, "usd_24h_change": 0}
     }
-
-    ids = 'bitcoin,ethereum,solana'
-    url = f"https://api.coingecko.com/api/v3/simple/price?ids={ids}&vs_currencies=usd&include_24hr_change=true"
+    url = (
+        "https://api.coingecko.com/api/v3/simple/price"
+        "?ids=bitcoin,ethereum,solana"
+        "&vs_currencies=usd"
+        "&include_24hr_change=true"
+    )
     try:
-        response = requests.get(url, timeout=5).json()
+        r = requests.get(url, timeout=5).json()
         for coin in prices:
-            if coin in response:
-                prices[coin]["usd"] = response[coin].get("usd", 0)
-                prices[coin]["usd_24h_change"] = response[coin].get("usd_24h_change", 0)
+            if coin in r:
+                prices[coin]["usd"] = r[coin].get("usd", 0)
+                prices[coin]["usd_24h_change"] = r[coin].get("usd_24h_change", 0)
     except Exception as e:
         print("CoinGecko API error:", e)
 
@@ -119,50 +134,53 @@ st.table(prices_df.style.format({
 st.info("🔄 Data refreshes automatically every 15 seconds.")
 
 # ----------------------------------------------------------------
-# Berita Terbaru
+# Berita Terbaru (diurutkan berdasarkan published_time)
 # ----------------------------------------------------------------
 st.subheader(f"🔥 Berita Terbaru - {feed_choice}")
 
 if feed_choice == "NEWEST":
     all_news = []
     for feed_url in RSS_FEEDS["NEWEST"]:
-        all_news.extend(fetch_news(feed_url, 2))
-    all_news.sort(key=lambda x: x['published'], reverse=True)
+        all_news.extend(fetch_news(feed_url, max_entries=2))
+
+    # Urutkan menurun berdasarkan time float
+    all_news.sort(key=lambda x: x["published_time"], reverse=True)
 
     if len(all_news) > 0:
+        # HEADLINE
         top_news = all_news[0]
         other_news = all_news[1:6]
 
-        # Headline
-        st.markdown(f"### [{top_news['title']}]({top_news['link']})")
-        # MENAMPILKAN WAKTU FEED
-        st.caption(top_news["published"])
+        st.markdown(f"### {top_news['title']}")
+        st.markdown(f"[Baca selengkapnya]({top_news['link']})")
         st.write(top_news['summary'])
         st.markdown("---")
 
-        for news in other_news:
-            st.markdown(f"- [{news['title']}]({news['link']}) ({news['published']})")
-
+        for news_item in other_news:
+            st.markdown(f"- **{news_item['title']}** [[Link]]({news_item['link']})")
     else:
         st.write("Tidak ada berita.")
 else:
+    # Single feed
     news_items = fetch_news(RSS_FEEDS[feed_choice], 5)
+    # Urutkan menurun
+    news_items.sort(key=lambda x: x["published_time"], reverse=True)
+
     if len(news_items) > 0:
         top_news = news_items[0]
         other_news = news_items[1:]
 
-        st.markdown(f"### [{top_news['title']}]({top_news['link']})")
-        # MENAMPILKAN WAKTU FEED
-        st.caption(top_news["published"])
+        st.markdown(f"### {top_news['title']}")
+        st.markdown(f"[Baca selengkapnya]({top_news['link']})")
         st.write(top_news['summary'])
         st.markdown("---")
 
-        for news in other_news:
-            st.markdown(f"- [{news['title']}]({news['link']}) ({news['published']})")
+        for item in other_news:
+            st.markdown(f"- **{item['title']}** [[Link]]({item['link']})")
     else:
         st.write("Tidak ada berita.")
 
 # ----------------------------------------------------------------
 # Auto-refresh 15 detik
 # ----------------------------------------------------------------
-count = st_autorefresh(interval=15_000, limit=None, key="news_refresher")
+st_autorefresh(interval=15_000, limit=None, key="news_refresher")
