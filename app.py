@@ -8,11 +8,10 @@ from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
-# ----------------------------------------------------------------
-# Fungsi ambil berita dari RSS (menyimpan published_time)
-# ----------------------------------------------------------------
+# --------------------------------------
+# Fungsi ambil berita dari RSS (User-Agent)
+# --------------------------------------
 def fetch_news(url, max_entries=5):
-    # Gunakan user-agent agar tidak diblokir
     resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
     if resp.status_code != 200:
         return []
@@ -20,27 +19,25 @@ def fetch_news(url, max_entries=5):
 
     news_data = []
     for entry in feed.entries[:max_entries]:
-        # Published time (float) diambil dari feedparser (time.struct_time)
+        # Gunakan published_parsed -> float agar bisa diurutkan
         if hasattr(entry, "published_parsed") and entry.published_parsed:
-            published_time = time.mktime(entry.published_parsed)
+            published_time = time.mktime(entry.published_parsed)  # float
         else:
-            # Jika feed tidak punya published_parsed, fallback ke 0
             published_time = 0
 
-        # Summaries
         summary = entry.summary[:300] + "..." if hasattr(entry, 'summary') else ""
-
         news_data.append({
             "title": entry.title,
             "link": entry.link,
             "summary": summary,
             "published_time": published_time,
+            "published_str": entry.get("published", "No published time")
         })
     return news_data
 
-# ----------------------------------------------------------------
-# Fungsi ambil harga crypto (Coingecko) + error handling
-# ----------------------------------------------------------------
+# --------------------------------------
+# Fungsi ambil harga crypto + error handling
+# --------------------------------------
 def get_crypto_prices():
     prices = {
         "bitcoin": {"usd": 0, "usd_24h_change": 0},
@@ -64,9 +61,9 @@ def get_crypto_prices():
 
     return prices
 
-# ----------------------------------------------------------------
+# --------------------------------------
 # RSS Feeds (Makro & Crypto)
-# ----------------------------------------------------------------
+# --------------------------------------
 RSS_FEEDS = {
     "NEWEST": [
         "https://www.cnbc.com/id/20910258/device/rss/rss.html",
@@ -100,17 +97,17 @@ RSS_FEEDS = {
     "Coinvestasi": "https://coinvestasi.com/feed"
 }
 
-# ----------------------------------------------------------------
-# Judul
-# ----------------------------------------------------------------
+# --------------------------------------
+# Title
+# --------------------------------------
 st.title("🚀 Realtime Macro & Crypto Dashboard")
 
 # Sidebar
 feed_choice = st.sidebar.selectbox("Pilih sumber berita", list(RSS_FEEDS.keys()))
 
-# ----------------------------------------------------------------
+# --------------------------------------
 # Harga Crypto
-# ----------------------------------------------------------------
+# --------------------------------------
 crypto_prices = get_crypto_prices()
 st.subheader("Live Crypto Prices")
 
@@ -133,9 +130,9 @@ st.table(prices_df.style.format({
 }))
 st.info("🔄 Data refreshes automatically every 15 seconds.")
 
-# ----------------------------------------------------------------
-# Berita Terbaru (diurutkan berdasarkan published_time)
-# ----------------------------------------------------------------
+# --------------------------------------
+# Berita Terbaru
+# --------------------------------------
 st.subheader(f"🔥 Berita Terbaru - {feed_choice}")
 
 if feed_choice == "NEWEST":
@@ -143,44 +140,50 @@ if feed_choice == "NEWEST":
     for feed_url in RSS_FEEDS["NEWEST"]:
         all_news.extend(fetch_news(feed_url, max_entries=2))
 
-    # Urutkan menurun berdasarkan time float
+    # Urutkan menurun berdasarkan published_time float
     all_news.sort(key=lambda x: x["published_time"], reverse=True)
 
-    if len(all_news) > 0:
-        # HEADLINE
+    if all_news:
         top_news = all_news[0]
-        other_news = all_news[1:6]
+        other_news = all_news[1:5]
 
         st.markdown(f"### {top_news['title']}")
         st.markdown(f"[Baca selengkapnya]({top_news['link']})")
+        # Tampilkan WAKTU feed
+        dt_headline = datetime.fromtimestamp(top_news["published_time"])
+        st.caption(dt_headline.strftime("%a, %d %b %Y %H:%M:%S UTC"))
         st.write(top_news['summary'])
         st.markdown("---")
 
-        for news_item in other_news:
-            st.markdown(f"- **{news_item['title']}** [[Link]]({news_item['link']})")
+        for item in other_news:
+            dt_item = datetime.fromtimestamp(item["published_time"])
+            pub_str = dt_item.strftime("%a, %d %b %Y %H:%M:%S UTC")
+            st.markdown(f"- **{item['title']}**\n   [{pub_str}]([[Link]]({item['link']}))")
     else:
         st.write("Tidak ada berita.")
 else:
     # Single feed
     news_items = fetch_news(RSS_FEEDS[feed_choice], 5)
-    # Urutkan menurun
     news_items.sort(key=lambda x: x["published_time"], reverse=True)
 
-    if len(news_items) > 0:
+    if news_items:
         top_news = news_items[0]
         other_news = news_items[1:]
-
         st.markdown(f"### {top_news['title']}")
         st.markdown(f"[Baca selengkapnya]({top_news['link']})")
+        dt_top = datetime.fromtimestamp(top_news["published_time"])
+        st.caption(dt_top.strftime("%a, %d %b %Y %H:%M:%S UTC"))
         st.write(top_news['summary'])
         st.markdown("---")
 
         for item in other_news:
-            st.markdown(f"- **{item['title']}** [[Link]]({item['link']})")
+            dt_item = datetime.fromtimestamp(item["published_time"])
+            pub_str = dt_item.strftime("%a, %d %b %Y %H:%M:%S UTC")
+            st.markdown(f"- **{item['title']}**\n   [{pub_str}]([[Link]]({item['link']}))")
     else:
         st.write("Tidak ada berita.")
 
-# ----------------------------------------------------------------
+# --------------------------------------
 # Auto-refresh 15 detik
-# ----------------------------------------------------------------
+# --------------------------------------
 st_autorefresh(interval=15_000, limit=None, key="news_refresher")
