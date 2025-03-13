@@ -4,11 +4,24 @@ import requests
 import pandas as pd
 from datetime import datetime
 import pytz
+import time
 from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
+# ------------------------------------------
+# Session State Setup
+# ------------------------------------------
+if "news_data" not in st.session_state:
+    st.session_state["news_data"] = []
+if "last_news_fetch" not in st.session_state:
+    st.session_state["last_news_fetch"] = 0.0  # epoch time
+if "feed_choice" not in st.session_state:
+    st.session_state["feed_choice"] = None
+
+# ------------------------------------------
 # Fungsi ambil berita dari RSS
+# ------------------------------------------
 def fetch_news(url, max_entries=5):
     feed = feedparser.parse(url)
     news_data = []
@@ -67,49 +80,81 @@ st.title("🚀 Realtime Macro & Crypto Dashboard")
 
 # Sidebar untuk navigasi sumber berita
 feed_choice = st.sidebar.selectbox("Pilih sumber berita", list(RSS_FEEDS.keys()))
+st.session_state["feed_choice"] = feed_choice
 
-# Crypto Prices
+# ------------------------------
+# Update Berita Setiap 15 Detik
+# ------------------------------
+def update_news():
+    if st.session_state["feed_choice"] == "NEWEST":
+        all_news = []
+        for feed_url in RSS_FEEDS["NEWEST"]:
+            all_news.extend(fetch_news(feed_url, 2))
+        all_news.sort(key=lambda x: x['published'], reverse=True)
+        st.session_state["news_data"] = all_news
+    else:
+        # Single feed
+        news_items = fetch_news(RSS_FEEDS[st.session_state["feed_choice"]], 5)
+        # Atur data ke news_data
+        st.session_state["news_data"] = news_items
+
+    st.session_state["last_news_fetch"] = time.time()
+
+# Cek apakah sudah lewat 15 detik
+elapsed = time.time() - st.session_state["last_news_fetch"]
+if elapsed > 15:
+    update_news()
+
+# ------------------------------
+# Harga Crypto (selalu update tiap rerun = 1 detik)
+# ------------------------------
 crypto_prices = get_crypto_prices()
 st.subheader("Live Crypto Prices")
 
 prices_df = pd.DataFrame({
     'Crypto': ['Bitcoin (BTC)', 'Ethereum (ETH)', 'Solana (SOL)'],
-    'Price (USD)': [crypto_prices['bitcoin']['usd'], crypto_prices['ethereum']['usd'], crypto_prices['solana']['usd']],
+    'Price (USD)': [
+        crypto_prices['bitcoin']['usd'],
+        crypto_prices['ethereum']['usd'],
+        crypto_prices['solana']['usd']
+    ],
     '24h Change (%)': [
         crypto_prices['bitcoin']['usd_24h_change'],
         crypto_prices['ethereum']['usd_24h_change'],
         crypto_prices['solana']['usd_24h_change']
     ]
 })
-st.table(prices_df.style.format({"Price (USD)": "${:,.2f}", "24h Change (%)": "{:.2f}%"}))
-st.info('🔄 Data refreshes automatically every 15 seconds.')
+st.table(prices_df.style.format({
+    "Price (USD)": "${:,.2f}",
+    "24h Change (%)": "{:.2f}%"
+}))
+st.info('Harga crypto refresh per 1 detik, berita setiap 15 detik.')
 
-# Berita terbaru
+# ------------------------------
+# Berita Terbaru
+# ------------------------------
 st.subheader(f"🔥 Berita Terbaru - {feed_choice}")
 
-# Zona waktu WIB
+# Zona waktu WIB (TAPI hanya untuk menampilkan jam sekarang, TIDAK memodifikasi jam feed)
 wib = pytz.timezone('Asia/Jakarta')
 
-if feed_choice == "NEWEST":
-    all_news = []
-    for feed_url in RSS_FEEDS["NEWEST"]:
-        all_news.extend(fetch_news(feed_url, 2))
-    all_news.sort(key=lambda x: x['published'], reverse=True)
-    top_news = all_news[:1][0]
+all_news = st.session_state["news_data"]
+if all_news:
+    top_news = all_news[0]
     other_news = all_news[1:6]
+    # Headline
+    st.markdown(f"### [{top_news['title']}]({top_news['link']})")
+    # Tampilkan jam feed apa adanya
+    st.caption(top_news["published"])  
+    st.write(top_news['summary'])
+    st.markdown("---")
+
+    for news in other_news:
+        st.markdown(f"- [{news['title']}]({news['link']}) ({news['published']})")
 else:
-    news_items = fetch_news(RSS_FEEDS[feed_choice], 5)
-    top_news = news_items[0]
-    other_news = news_items[1:]
+    st.write("Tidak ada berita.")
 
-st.markdown(f"### [{top_news['title']}]({top_news['link']})")
-st.caption(datetime.now(wib).strftime('%A, %d %B %Y %H:%M WIB'))
-st.write(top_news['summary'])
-st.markdown("---")
-
-for news in other_news:
-    st.markdown(f"- [{news['title']}]({news['link']}) ({news['published']})")
-
-# Refresh otomatis tiap 15 detik
-
-count = st_autorefresh(interval=15_000, limit=None, key="news_refresher")
+# ------------------------------
+# Auto-refresh SELURUH Halaman per 1 detik
+# ------------------------------
+st_autorefresh(interval=1_000, limit=None, key="crypto_refresher")
