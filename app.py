@@ -8,18 +8,21 @@ from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
-# Add custom CSS for styling
+# Add custom CSS for styling with improved contrast
 st.markdown("""
     <style>
+    .main {
+        background-color: #1e1e2f;
+    }
     .news-card {
-        background-color: white;
+        background-color: #f0f0f0;
         padding: 15px;
         border-radius: 10px;
         margin-bottom: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     .news-headline {
-        color: #1e1e2f;
+        color: #1e1e2f;  /* Dark blue-gray for better contrast */
         font-size: 20px;
         font-weight: bold;
     }
@@ -36,20 +39,26 @@ st.markdown("""
         padding: 15px;
         border-radius: 10px;
         text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .crypto-name {
+        font-size: 20px;
+        font-weight: bold;
+        color: #1e1e2f;  /* Dark blue-gray for better contrast */
     }
     .crypto-price {
         font-size: 18px;
         font-weight: bold;
-        color: #1e1e2f;
+        color: #1e1e2f;  /* Darker color for prices */
     }
     .crypto-change {
         font-size: 16px;
     }
     .crypto-change.negative {
-        color: red;
+        color: #FF0000;  /* Bright red for negative change */
     }
     .crypto-change.positive {
-        color: green;
+        color: #00FF00;  /* Bright green for positive change */
     }
     </style>
 """, unsafe_allow_html=True)
@@ -173,7 +182,7 @@ for col, (name, key) in zip([col1, col2, col3], cryptos):
         change_class = 'negative' if change < 0 else 'positive'
         st.markdown(f"""
         <div class='crypto-card'>
-            <h3>{name}</h3>
+            <h3 class='crypto-name'>{name}</h3>
             <p class='crypto-price'>${price:,.2f}</p>
             <p class='crypto-change {change_class}'>{change:.2f}%</p>
         </div>
