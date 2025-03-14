@@ -47,7 +47,6 @@ st.markdown("""
     }
     .crypto-name.bitcoin {
         color: #FFD700; /* Yellow for Bitcoin name */
-        background-color: #000000;
     }
     .crypto-name.ethereum, .crypto-name.solana {
         color: #FFFFFF; /* White for Ethereum and Solana */
@@ -91,7 +90,7 @@ def fetch_news(url, max_entries=5):
     return news_data
 
 # --------------------------------------
-# Fungsi ambil harga crypto
+# Fungsi ambil harga crypto with debugging
 # --------------------------------------
 def get_crypto_prices():
     prices = {
@@ -107,6 +106,7 @@ def get_crypto_prices():
     )
     try:
         r = requests.get(url, timeout=5).json()
+        st.write("API Response:", r)  # Debugging: Check API response
         for coin in prices:
             if coin in r:
                 prices[coin]["usd"] = r[coin].get("usd", 0)
@@ -121,11 +121,10 @@ if 'crypto_prices' not in st.session_state:
 if 'last_price_refresh' not in st.session_state:
     st.session_state.last_price_refresh = time.time()
 
-# Check if 15 seconds have passed since the last refresh
-current_time = time.time()
-if current_time - st.session_state.last_price_refresh >= 15:
+# Manual refresh button to update prices
+if st.button("Refresh Crypto Prices"):
     st.session_state.crypto_prices = get_crypto_prices()
-    st.session_state.last_price_refresh = current_time
+    st.session_state.last_price_refresh = time.time()
 
 # --------------------------------------
 # Daftar RSS Feeds dan Features
@@ -206,7 +205,7 @@ for col, (name, key) in zip([col1, col2, col3], cryptos):
         </div>
         """, unsafe_allow_html=True)
 
-st.info("🔄 Data refreshes automatically every 15 seconds.")
+st.info("🔄 Data refreshes automatically every 15 seconds (or click 'Refresh Crypto Prices' button).")
 
 # Fungsi tampil berita
 def display_news_items(news_list):
@@ -259,10 +258,10 @@ if section == "News Feed":
 elif section == "Features":
     if feature_choice == "Fear and Greed Index":
         st.subheader("Fear and Greed Index")
-        st.components.v1.iframe("https://alternative.me/crypto/fear-and-greed-index/", height=600, scrolling=True)
+        st.components.v1.iframe("https://alternative.me/crypto/fear-and-greed-index/", height=600, width=800, scrolling=True)
     elif feature_choice == "Bitcoin Rainbow Chart":
         st.subheader("Bitcoin Rainbow Chart")
-        st.components.v1.iframe("https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/", height=600, scrolling=True)
+        st.components.v1.iframe("https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/", height=600, width=800, scrolling=True)
 
 # Auto-refresh the entire app every 15 seconds
 st_autorefresh(interval=15_000, limit=None, key="price_refresher")
