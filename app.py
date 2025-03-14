@@ -8,26 +8,26 @@ from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
-# Add custom CSS for styling with improved contrast
+# Add custom CSS for styling with your requested changes
 st.markdown("""
     <style>
     .main {
         background-color: #1e1e2f;
     }
     .news-card {
-        background-color: #f0f0f0;
+        background-color: #000000; /* Black background for news cards */
         padding: 15px;
         border-radius: 10px;
         margin-bottom: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     .news-headline {
-        color: #1e1e2f;  /* Dark blue-gray for better contrast */
+        color: #FFFFFF; /* White headline text */
         font-size: 20px;
         font-weight: bold;
     }
     .news-summary {
-        color: #333;
+        color: #CCCCCC; /* Light gray for summary text */
         font-size: 14px;
     }
     .news-timestamp {
@@ -35,7 +35,7 @@ st.markdown("""
         font-size: 12px;
     }
     .crypto-card {
-        background-color: #f0f0f0;
+        background-color: #D3D3D3; /* Gray background for crypto cards */
         padding: 15px;
         border-radius: 10px;
         text-align: center;
@@ -44,21 +44,26 @@ st.markdown("""
     .crypto-name {
         font-size: 20px;
         font-weight: bold;
-        color: #1e1e2f;  /* Dark blue-gray for better contrast */
+    }
+    .crypto-name.bitcoin {
+        color: #FFD700; /* Yellow for Bitcoin name */
+    }
+    .crypto-name.ethereum, .crypto-name.solana {
+        color: #1e1e2f; /* Dark blue-gray for Ethereum and Solana */
     }
     .crypto-price {
         font-size: 18px;
         font-weight: bold;
-        color: #1e1e2f;  /* Darker color for prices */
+        color: #1e1e2f;
     }
     .crypto-change {
         font-size: 16px;
     }
     .crypto-change.negative {
-        color: #FF0000;  /* Bright red for negative change */
+        color: #FF0000; /* Bright red for negative change */
     }
     .crypto-change.positive {
-        color: #00FF00;  /* Bright green for positive change */
+        color: #00FF00; /* Bright green for positive change */
     }
     </style>
 """, unsafe_allow_html=True)
@@ -180,9 +185,10 @@ for col, (name, key) in zip([col1, col2, col3], cryptos):
         price = crypto_prices[key]['usd']
         change = crypto_prices[key]['usd_24h_change']
         change_class = 'negative' if change < 0 else 'positive'
+        name_class = 'bitcoin' if 'Bitcoin' in name else ('ethereum' if 'Ethereum' in name else 'solana')
         st.markdown(f"""
         <div class='crypto-card'>
-            <h3 class='crypto-name'>{name}</h3>
+            <h3 class='crypto-name {name_class}'>{name}</h3>
             <p class='crypto-price'>${price:,.2f}</p>
             <p class='crypto-change {change_class}'>{change:.2f}%</p>
         </div>
