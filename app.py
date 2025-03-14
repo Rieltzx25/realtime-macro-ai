@@ -89,7 +89,7 @@ def fetch_news(url, max_entries=5):
     return news_data
 
 # --------------------------------------
-# Fungsi ambil harga crypto
+# Fungsi ambil harga crypto dengan debugging untuk perubahan harian
 # --------------------------------------
 def get_crypto_prices():
     prices = {
@@ -107,10 +107,14 @@ def get_crypto_prices():
     try:
         time.sleep(2)  # Add delay to respect rate limit
         r = requests.get(url, headers=headers, timeout=10).json()
+        # Temporary debugging to check full response
+        # st.write("API Response:", r)  # Uncomment if further debugging is needed
         for coin in prices:
             if coin in r:
                 prices[coin]["usd"] = r[coin].get("usd", 0)
                 prices[coin]["usd_24h_change"] = r[coin].get("usd_24h_change", 0)
+                if "usd_24h_change" not in r[coin]:
+                    st.warning(f"No 24h change data available for {coin}")
     except Exception as e:
         st.error(f"API Error: {e} - Using last known values.")
     return prices
