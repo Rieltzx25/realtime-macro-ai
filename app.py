@@ -167,8 +167,10 @@ NEWS_SOURCES = {k: v for k, v in RSS_FEEDS.items() if v is not None}
 FEATURES = ["Fear and Greed Index", "Bitcoin Rainbow Chart"]
 
 # --------------------------------------
-# Sidebar: Pilih Section
+# Sidebar: Pilih Section dengan Logo
 # --------------------------------------
+# Tambahkan logo dari direktori utama
+st.sidebar.image("cat.logo.webp", use_column_width=False, width=100)
 st.sidebar.header("Navigation")
 section = st.sidebar.radio("Choose Section", ["News Feed", "Features"])
 
