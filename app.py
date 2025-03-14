@@ -7,7 +7,7 @@ from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
-# Add custom CSS for styling
+# Add custom CSS for styling including logo
 st.markdown("""
     <style>
     .main {
@@ -63,6 +63,15 @@ st.markdown("""
     }
     .crypto-change.positive {
         color: #00FF00;
+    }
+    /* Style untuk logo */
+    .logo-container {
+        text-align: center;
+        padding: 10px 0;
+    }
+    .logo-container img {
+        max-width: 100px;
+        height: auto;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -167,8 +176,9 @@ NEWS_SOURCES = {k: v for k, v in RSS_FEEDS.items() if v is not None}
 FEATURES = ["Fear and Greed Index", "Bitcoin Rainbow Chart"]
 
 # --------------------------------------
-# Sidebar: Pilih Section
+# Sidebar: Pilih Section dengan Logo
 # --------------------------------------
+st.sidebar.markdown('<div class="logo-container"><img src="URL_GIF_ANAK_KUCING" alt="Cat Logo"></div>', unsafe_allow_html=True)
 st.sidebar.header("Navigation")
 section = st.sidebar.radio("Choose Section", ["News Feed", "Features"])
 
