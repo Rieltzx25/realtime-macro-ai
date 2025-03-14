@@ -4,6 +4,7 @@ import requests
 import time
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
+import os
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
@@ -101,7 +102,7 @@ def get_crypto_prices():
         "https://api.coingecko.com/api/v3/simple/price"
         "?ids=bitcoin,ethereum,solana"
         "&vs_currencies=usd"
-        "&include_24h_change=true"
+        "&include_24hr_change=true"
     )
     try:
         r = requests.get(url, timeout=5).json()
@@ -109,9 +110,8 @@ def get_crypto_prices():
             if coin in r:
                 prices[coin]["usd"] = r[coin].get("usd", 0)
                 prices[coin]["usd_24h_change"] = r[coin].get("usd_24h_change", 0)
-        st.write("Debug: Harga crypto diperbarui:", prices)  # Tambahkan debug
     except Exception as e:
-        st.error(f"CoinGecko API error: {e}")
+        print("CoinGecko API error:", e)
     return prices
 
 # Initialize session state for crypto prices and last refresh time
@@ -120,14 +120,11 @@ if 'crypto_prices' not in st.session_state:
 if 'last_price_refresh' not in st.session_state:
     st.session_state.last_price_refresh = time.time()
 
-# Fungsi untuk memperbarui harga secara manual
-def update_prices():
+# Check if 15 seconds have passed since the last refresh
+current_time = time.time()
+if current_time - st.session_state.last_price_refresh >= 15:
     st.session_state.crypto_prices = get_crypto_prices()
-    st.session_state.last_price_refresh = time.time()
-
-# Panggil update_prices setiap 15 detik
-if st_autorefresh(interval=15_000, limit=None, key="price_refresher"):
-    update_prices()
+    st.session_state.last_price_refresh = current_time
 
 # --------------------------------------
 # Daftar RSS Feeds dan Features
@@ -173,11 +170,13 @@ FEATURES = ["Fear and Greed Index", "Bitcoin Rainbow Chart"]
 # --------------------------------------
 # Sidebar: Pilih Section dengan Logo
 # --------------------------------------
-# Cek apakah file cat.logo.webp ada (opsional, bisa diganti dengan URL jika masalah berlanjut)
-if os.path.exists("cat_logo.webp"):
-    st.sidebar.image("cat_logo.webp", use_container_width=False, width=200)
+# Cek apakah file cat.logo.webp ada
+logo_path = "cat_logo.webp"
+if os.path.exists(logo_path):
+    st.sidebar.image(logo_path, use_container_width=False, width=200)
 else:
-    st.sidebar.error("File cat_logo.webp tidak ditemukan. Pastikan file ada di direktori utama.")
+    st.sidebar.error(f"File {logo_path} tidak ditemukan. Pastikan file ada di direktori utama repositori.")
+
 st.sidebar.header("Navigation")
 section = st.sidebar.radio("Choose Section", ["News Feed", "Features"])
 
@@ -268,3 +267,6 @@ elif section == "Features":
         st.subheader("Bitcoin Rainbow Chart")
         st.warning("Iframe is blocked by the site. Click the link below to view.")
         st.link_button("Visit Bitcoin Rainbow Chart", "https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/")
+
+# Auto-refresh the entire app every 15 seconds
+st_autorefresh(interval=15_000, limit=None, key="price_refresher")
