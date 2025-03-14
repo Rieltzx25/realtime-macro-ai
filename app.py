@@ -35,7 +35,7 @@ st.markdown("""
         font-size: 12px;
     }
     .crypto-card {
-        background-color: #D3D3D3; /* Gray background for crypto cards */
+        background-color: #000000; /* Gray background for crypto cards */
         padding: 15px;
         border-radius: 10px;
         text-align: center;
