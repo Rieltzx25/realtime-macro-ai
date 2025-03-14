@@ -24,18 +24,9 @@ st.markdown("""
         background-color: #1e1e2f;
         color: white;
     }
-    .stSelectbox > div > label {
-        color: white;
-    }
-    h1, h2, h3 {
+    h1, h2 {
         color: #1e1e2f;
         font-family: 'Arial', sans-serif;
-    }
-    .stTable {
-        background-color: white;
-        border-radius: 10px;
-        padding: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     .news-card {
         background-color: white;
@@ -44,12 +35,27 @@ st.markdown("""
         margin-bottom: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
+    .news-card h3 {
+        color: #1e1e2f !important;  /* Ensure headline is visible */
+        margin-bottom: 5px;
+    }
     .price-box {
         background-color: #1e1e2f;
         color: white;
         padding: 15px;
         border-radius: 10px;
         text-align: center;
+    }
+    .sidebar-link {
+        color: #00d4ff;
+        font-size: 18px;
+        text-decoration: none;
+        display: block;
+        margin: 10px 0;
+    }
+    .sidebar-link:hover {
+        color: #ff6f61;
+        text-decoration: underline;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -137,18 +143,24 @@ RSS_FEEDS = {
 }
 
 # --------------------------------------
-# Sidebar
+# Sidebar with Hyperlink Navigation
 # --------------------------------------
 with st.sidebar:
     st.header("Dashboard Menu")
-    page = st.selectbox("Choose Section", ["News Feed", "Crypto Prices", "Features"])
+    st.markdown('<a href="?page=news" class="sidebar-link">News Feed</a>', unsafe_allow_html=True)
+    st.markdown('<a href="?page=prices" class="sidebar-link">Crypto Prices</a>', unsafe_allow_html=True)
+    st.markdown('<a href="?page=features" class="sidebar-link">Features</a>', unsafe_allow_html=True)
+
+# Get the page from query parameters
+query_params = st.experimental_get_query_params()
+page = query_params.get("page", ["news"])[0]
 
 # --------------------------------------
 # Main Content
 # --------------------------------------
 st.title("🚀 Realtime Macro & Crypto Dashboard")
 
-if page == "News Feed":
+if page == "news":
     feed_choice = st.sidebar.selectbox("Select News Source", list(RSS_FEEDS.keys()))
     
     # Fetch and display news
@@ -174,7 +186,7 @@ if page == "News Feed":
                 st.write(item['summary'])
                 st.markdown(f"<a href='{item['link']}' target='_blank'>Read More</a></div>", unsafe_allow_html=True)
 
-elif page == "Crypto Prices":
+elif page == "prices":
     st.subheader("Live Crypto Prices")
     crypto_prices = get_crypto_prices()
 
@@ -188,7 +200,7 @@ elif page == "Crypto Prices":
     
     st.info("🔄 Data refreshes every 15 seconds.")
 
-elif page == "Features":
+elif page == "features":
     feature_choice = st.sidebar.selectbox("Select Feature", ["Fear and Greed Index", "Bitcoin Rainbow Chart"])
     
     if feature_choice == "Fear and Greed Index":
