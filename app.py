@@ -169,8 +169,8 @@ FEATURES = ["Fear and Greed Index", "Bitcoin Rainbow Chart"]
 # --------------------------------------
 # Sidebar: Pilih Section dengan Logo
 # --------------------------------------
-# Tambahkan logo dari direktori utama
-st.sidebar.image("cat.logo.webp", use_column_width=False, width=100)
+# Tambahkan logo dari direktori utama dengan parameter yang diperbarui
+st.sidebar.image("cat.logo.webp", use_container_width=False, width=100)
 st.sidebar.header("Navigation")
 section = st.sidebar.radio("Choose Section", ["News Feed", "Features"])
 
