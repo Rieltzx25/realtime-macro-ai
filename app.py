@@ -49,12 +49,12 @@ st.markdown("""
         color: #FFD700; /* Yellow for Bitcoin name */
     }
     .crypto-name.ethereum, .crypto-name.solana {
-        color: #1e1e2f; /* Dark blue-gray for Ethereum and Solana */
+        color: #FFFFFF; /* Dark blue-gray for Ethereum and Solana */
     }
     .crypto-price {
         font-size: 18px;
         font-weight: bold;
-        color: #1e1e2f;
+        color: #FFFFFF;
     }
     .crypto-change {
         font-size: 16px;
