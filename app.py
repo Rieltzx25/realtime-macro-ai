@@ -1,33 +1,32 @@
 import streamlit as st
 import feedparser
 import requests
-import pandas as pd
 import time
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
-# Add custom CSS for styling with your requested changes
+# Add custom CSS for styling
 st.markdown("""
     <style>
     .main {
         background-color: #1e1e2f;
     }
     .news-card {
-        background-color: #000000; /* Black background for news cards */
+        background-color: #000000;
         padding: 15px;
         border-radius: 10px;
         margin-bottom: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     .news-headline {
-        color: #FFFFFF; /* White headline text */
+        color: #FFFFFF;
         font-size: 20px;
         font-weight: bold;
     }
     .news-summary {
-        color: #CCCCCC; /* Light gray for summary text */
+        color: #CCCCCC;
         font-size: 14px;
     }
     .news-timestamp {
@@ -35,7 +34,7 @@ st.markdown("""
         font-size: 12px;
     }
     .crypto-card {
-        background-color: #000000; /* Black background for crypto cards */
+        background-color: #000000;
         padding: 15px;
         border-radius: 10px;
         text-align: center;
@@ -46,10 +45,10 @@ st.markdown("""
         font-weight: bold;
     }
     .crypto-name.bitcoin {
-        color: #FFD700; /* Yellow for Bitcoin name */
+        color: #FFD700;
     }
     .crypto-name.ethereum, .crypto-name.solana {
-        color: #FFFFFF; /* White for Ethereum and Solana */
+        color: #FFFFFF;
     }
     .crypto-price {
         font-size: 18px;
@@ -60,10 +59,10 @@ st.markdown("""
         font-size: 16px;
     }
     .crypto-change.negative {
-        color: #FF0000; /* Bright red for negative change */
+        color: #FF0000;
     }
     .crypto-change.positive {
-        color: #00FF00; /* Bright green for positive change */
+        color: #00FF00;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -90,7 +89,7 @@ def fetch_news(url, max_entries=5):
     return news_data
 
 # --------------------------------------
-# Fungsi ambil harga crypto with debugging
+# Fungsi ambil harga crypto with enhanced debugging
 # --------------------------------------
 def get_crypto_prices():
     prices = {
@@ -102,29 +101,24 @@ def get_crypto_prices():
         "https://api.coingecko.com/api/v3/simple/price"
         "?ids=bitcoin,ethereum,solana"
         "&vs_currencies=usd"
-        "&include_24hr_change=true"
+        "&include_24h_change=true"
     )
+    headers = {"User-Agent": "MyCryptoApp/1.0 (https://yourdomain.com)"}
     try:
-        r = requests.get(url, timeout=5).json()
-        st.write("API Response:", r)  # Debugging: Check API response
+        time.sleep(2)  # Add delay to respect rate limit
+        r = requests.get(url, headers=headers, timeout=10).json()
+        st.write("API Response:", r)  # Debugging: Check full API response
         for coin in prices:
             if coin in r:
                 prices[coin]["usd"] = r[coin].get("usd", 0)
                 prices[coin]["usd_24h_change"] = r[coin].get("usd_24h_change", 0)
     except Exception as e:
-        st.warning(f"Failed to fetch crypto prices: {e} - Using last known values.")
+        st.error(f"API Error: {e} - Using last known values.")
     return prices
 
-# Initialize session state for crypto prices and last refresh time
+# Initialize session state for crypto prices
 if 'crypto_prices' not in st.session_state:
     st.session_state.crypto_prices = get_crypto_prices()
-if 'last_price_refresh' not in st.session_state:
-    st.session_state.last_price_refresh = time.time()
-
-# Manual refresh button to update prices
-if st.button("Refresh Crypto Prices"):
-    st.session_state.crypto_prices = get_crypto_prices()
-    st.session_state.last_price_refresh = time.time()
 
 # --------------------------------------
 # Daftar RSS Feeds dan Features
@@ -183,7 +177,7 @@ elif section == "Features":
 # --------------------------------------
 st.title("🚀 Realtime Macro & Crypto Dashboard")
 
-# Harga Crypto (selalu ditampilkan using session state)
+# Harga Crypto with manual refresh
 st.subheader("Live Crypto Prices")
 col1, col2, col3 = st.columns(3)
 cryptos = [
@@ -205,15 +199,17 @@ for col, (name, key) in zip([col1, col2, col3], cryptos):
         </div>
         """, unsafe_allow_html=True)
 
-st.info("🔄 Data refreshes automatically every 15 seconds (or click 'Refresh Crypto Prices' button).")
+if st.button("Refresh Crypto Prices"):
+    st.session_state.crypto_prices = get_crypto_prices()
+    st.success("Prices refreshed!")
+
+st.info("🔄 Click 'Refresh Crypto Prices' to update data manually.")
 
 # Fungsi tampil berita
 def display_news_items(news_list):
     if not news_list:
         st.write("Tidak ada berita.")
         return
-
-    # HEADLINE = news teratas
     top_news = news_list[0]
     dt_top = datetime.fromtimestamp(top_news["published_time"])
     news_html = f"""
@@ -226,8 +222,6 @@ def display_news_items(news_list):
     """
     st.markdown(news_html, unsafe_allow_html=True)
     st.markdown("---")
-
-    # 9 berita lain
     for item in news_list[1:10]:
         dt_item = datetime.fromtimestamp(item["published_time"])
         item_html = f"""
@@ -258,10 +252,17 @@ if section == "News Feed":
 elif section == "Features":
     if feature_choice == "Fear and Greed Index":
         st.subheader("Fear and Greed Index")
-        st.components.v1.iframe("https://alternative.me/crypto/fear-and-greed-index/", height=600, width=800, scrolling=True)
+        st.warning("Iframe is blocked by the site. Click the link below to view.")
+        st.link_button("Visit Fear and Greed Index", "https://alternative.me/crypto/fear-and-greed-index/")
+        # Optional: Upload static image if available
+        uploaded_file = st.file_uploader("Upload Fear and Greed Index screenshot (PNG/JPG)", type=["png", "jpg", "jpeg"])
+        if uploaded_file is not None:
+            st.image(uploaded_file, caption="Fear and Greed Index Snapshot", use_column_width=True)
     elif feature_choice == "Bitcoin Rainbow Chart":
         st.subheader("Bitcoin Rainbow Chart")
-        st.components.v1.iframe("https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/", height=600, width=800, scrolling=True)
-
-# Auto-refresh the entire app every 15 seconds
-st_autorefresh(interval=15_000, limit=None, key="price_refresher")
+        st.warning("Iframe is blocked by the site. Click the link below to view.")
+        st.link_button("Visit Bitcoin Rainbow Chart", "https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/")
+        # Optional: Upload static image if available
+        uploaded_file = st.file_uploader("Upload Bitcoin Rainbow Chart screenshot (PNG/JPG)", type=["png", "jpg", "jpeg"])
+        if uploaded_file is not None:
+            st.image(uploaded_file, caption="Bitcoin Rainbow Chart Snapshot", use_column_width=True)
