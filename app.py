@@ -107,7 +107,6 @@ def get_crypto_prices():
     try:
         time.sleep(2)  # Add delay to respect rate limit
         r = requests.get(url, headers=headers, timeout=10).json()
-        st.write("API Response:", r)  # Debugging: Check full API response
         for coin in prices:
             if coin in r:
                 prices[coin]["usd"] = r[coin].get("usd", 0)
