@@ -6,10 +6,56 @@ import time
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
-st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
+# Page Config
+st.set_page_config(
+    page_title="Realtime Macro & Crypto Dashboard 🚀",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Custom CSS for better UI
+st.markdown("""
+    <style>
+    .main {
+        background-color: #f9f9f9;
+        padding: 20px;
+    }
+    .sidebar .sidebar-content {
+        background-color: #1e1e2f;
+        color: white;
+    }
+    .stSelectbox > div > label {
+        color: white;
+    }
+    h1, h2, h3 {
+        color: #1e1e2f;
+        font-family: 'Arial', sans-serif;
+    }
+    .stTable {
+        background-color: white;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .news-card {
+        background-color: white;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .price-box {
+        background-color: #1e1e2f;
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # --------------------------------------
-# Fungsi ambil berita dari RSS (User-Agent)
+# Fetch News Function
 # --------------------------------------
 def fetch_news(url, max_entries=5):
     resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
@@ -19,12 +65,7 @@ def fetch_news(url, max_entries=5):
 
     news_data = []
     for entry in feed.entries[:max_entries]:
-        # Waktu float agar bisa diurutkan
-        if hasattr(entry, "published_parsed") and entry.published_parsed:
-            published_time = time.mktime(entry.published_parsed)
-        else:
-            published_time = 0
-
+        published_time = time.mktime(entry.published_parsed) if hasattr(entry, "published_parsed") else 0
         summary = entry.summary[:300] + "..." if hasattr(entry, 'summary') else ""
         news_data.append({
             "title": entry.title,
@@ -35,7 +76,7 @@ def fetch_news(url, max_entries=5):
     return news_data
 
 # --------------------------------------
-# Fungsi ambil harga crypto
+# Fetch Crypto Prices Function
 # --------------------------------------
 def get_crypto_prices():
     prices = {
@@ -60,10 +101,10 @@ def get_crypto_prices():
     return prices
 
 # --------------------------------------
-# Daftar RSS Feeds, plus dua item baru
+# RSS Feeds
 # --------------------------------------
 RSS_FEEDS = {
-    "NEWEST": [
+    "Newest": [
         "https://www.cnbc.com/id/20910258/device/rss/rss.html",
         "https://www.cnbc.com/id/10000664/device/rss/rss.html",
         "https://www.reutersagency.com/feed/?best-topics=business-finance",
@@ -92,98 +133,73 @@ RSS_FEEDS = {
     "CoinDesk": "https://www.coindesk.com/arc/outboundfeeds/rss/",
     "Cointelegraph": "https://cointelegraph.com/rss",
     "Yahoo Finance": "https://finance.yahoo.com/news/rssindex",
-    "Coinvestasi": "https://coinvestasi.com/feed",
-    # Dua item spesial (bukan feed RSS)
-    "Fear and Greed Index": None,
-    "Bitcoin Rainbow Chart": None
+    "Coinvestasi": "https://coinvestasi.com/feed"
 }
 
 # --------------------------------------
-# Title
+# Sidebar
+# --------------------------------------
+with st.sidebar:
+    st.header("Dashboard Menu")
+    page = st.selectbox("Choose Section", ["News Feed", "Crypto Prices", "Features"])
+
+# --------------------------------------
+# Main Content
 # --------------------------------------
 st.title("🚀 Realtime Macro & Crypto Dashboard")
 
-# Sidebar: pilih sumber berita
-feed_choice = st.sidebar.selectbox("Pilih sumber berita", list(RSS_FEEDS.keys()))
+if page == "News Feed":
+    feed_choice = st.sidebar.selectbox("Select News Source", list(RSS_FEEDS.keys()))
+    
+    # Fetch and display news
+    if feed_choice == "Newest":
+        all_news = []
+        for feed_url in RSS_FEEDS["Newest"]:
+            all_news.extend(fetch_news(feed_url, max_entries=3))
+        all_news.sort(key=lambda x: x["published_time"], reverse=True)
+    else:
+        feed_url = RSS_FEEDS[feed_choice]
+        all_news = fetch_news(feed_url, max_entries=10)
+        all_news.sort(key=lambda x: x["published_time"], reverse=True)
 
-# Harga Crypto
-crypto_prices = get_crypto_prices()
-st.subheader("Live Crypto Prices")
+    st.subheader(f"🔥 {feed_choice} News")
+    if not all_news:
+        st.write("No news available.")
+    else:
+        for item in all_news[:10]:
+            with st.container():
+                st.markdown(f"<div class='news-card'><h3>{item['title']}</h3>", unsafe_allow_html=True)
+                dt_item = datetime.fromtimestamp(item["published_time"])
+                st.caption(dt_item.strftime("%a, %d %b %Y %H:%M:%S UTC"))
+                st.write(item['summary'])
+                st.markdown(f"<a href='{item['link']}' target='_blank'>Read More</a></div>", unsafe_allow_html=True)
 
-prices_df = pd.DataFrame({
-    'Crypto': ['Bitcoin (BTC)', 'Ethereum (ETH)', 'Solana (SOL)'],
-    'Price (USD)': [
-        crypto_prices['bitcoin']['usd'],
-        crypto_prices['ethereum']['usd'],
-        crypto_prices['solana']['usd']
-    ],
-    '24h Change (%)': [
-        crypto_prices['bitcoin']['usd_24h_change'],
-        crypto_prices['ethereum']['usd_24h_change'],
-        crypto_prices['solana']['usd_24h_change']
-    ]
-})
-st.table(prices_df.style.format({
-    "Price (USD)": "${:,.2f}",
-    "24h Change (%)": "{:.2f}%"
-}))
+elif page == "Crypto Prices":
+    st.subheader("Live Crypto Prices")
+    crypto_prices = get_crypto_prices()
 
-st.info("🔄 Data refreshes automatically every 15 seconds.")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown(f"<div class='price-box'><h3>Bitcoin (BTC)</h3><p>${crypto_prices['bitcoin']['usd']:,.2f}</p><p>24h: {crypto_prices['bitcoin']['usd_24h_change']:.2f}%</p></div>", unsafe_allow_html=True)
+    with col2:
+        st.markdown(f"<div class='price-box'><h3>Ethereum (ETH)</h3><p>${crypto_prices['ethereum']['usd']:,.2f}</p><p>24h: {crypto_prices['ethereum']['usd_24h_change']:.2f}%</p></div>", unsafe_allow_html=True)
+    with col3:
+        st.markdown(f"<div class='price-box'><h3>Solana (SOL)</h3><p>${crypto_prices['solana']['usd']:,.2f}</p><p>24h: {crypto_prices['solana']['usd_24h_change']:.2f}%</p></div>", unsafe_allow_html=True)
+    
+    st.info("🔄 Data refreshes every 15 seconds.")
 
-# Fungsi tampil berita
-def display_news_items(news_list):
-    if not news_list:
-        st.write("Tidak ada berita.")
-        return
+elif page == "Features":
+    feature_choice = st.sidebar.selectbox("Select Feature", ["Fear and Greed Index", "Bitcoin Rainbow Chart"])
+    
+    if feature_choice == "Fear and Greed Index":
+        st.subheader("Fear and Greed Index")
+        st.markdown("[**View Fear & Greed Index**](https://alternative.me/crypto/fear-and-greed-index/)")
+        st.components.v1.iframe("https://alternative.me/crypto/fear-and-greed-index/", height=600, scrolling=True)
+    
+    elif feature_choice == "Bitcoin Rainbow Chart":
+        st.subheader("Bitcoin Rainbow Chart")
+        st.markdown("[**View Bitcoin Rainbow Chart**](https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/)")
+        st.components.v1.iframe("https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/", height=600, scrolling=True)
 
-    # HEADLINE = news teratas
-    top_news = news_list[0]
-    st.markdown(f"### {top_news['title']}")
-    st.markdown(f"[Baca selengkapnya]({top_news['link']})")
-
-    dt_top = datetime.fromtimestamp(top_news["published_time"])
-    st.caption(dt_top.strftime("%a, %d %b %Y %H:%M:%S UTC"))
-    st.write(top_news['summary'])
-    st.markdown("---")
-
-    # 9 berita lain
-    for item in news_list[1:10]:
-        dt_item = datetime.fromtimestamp(item["published_time"])
-        st.markdown(f"- **{item['title']}**")
-        st.caption(dt_item.strftime("%a, %d %b %Y %H:%M:%S UTC"))
-        st.write(item['summary'])
-        st.markdown(f"[Link]({item['link']})\n")
-
-# --------------------------------------
-# Tampilkan konten berdasar feed_choice
-# --------------------------------------
-if feed_choice == "Fear and Greed Index":
-    st.subheader("Fear and Greed Index")
-    # MISAL: Tampilkan iframe dari alternative.me
-    st.markdown("[**Lihat Fear & Greed Index**](https://alternative.me/crypto/fear-and-greed-index/)")
-    st.components.v1.iframe("https://alternative.me/crypto/fear-and-greed-index/", height=600, scrolling=True)
-
-elif feed_choice == "Bitcoin Rainbow Chart":
-    st.subheader("Bitcoin Rainbow Chart")
-    # MISAL: Tampilkan iframe dari blockchaincenter.net
-    st.markdown("[**Lihat Bitcoin Rainbow Chart**](https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/)")
-    st.components.v1.iframe("https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/", height=600, scrolling=True)
-
-elif feed_choice == "NEWEST":
-    # NEWEST feed => kita gabung feed
-    all_news = []
-    for feed_url in RSS_FEEDS["NEWEST"]:
-        all_news.extend(fetch_news(feed_url, max_entries=3))
-    all_news.sort(key=lambda x: x["published_time"], reverse=True)
-    st.subheader(f"🔥 Berita Terbaru - {feed_choice}")
-    display_news_items(all_news)
-else:
-    # Single feed: fetch 10
-    feed_url = RSS_FEEDS[feed_choice]
-    all_news = fetch_news(feed_url, max_entries=10)
-    all_news.sort(key=lambda x: x["published_time"], reverse=True)
-    st.subheader(f"🔥 Berita Terbaru - {feed_choice}")
-    display_news_items(all_news)
-
-# Auto-refresh 15 detik
-st_autorefresh(interval=15_000, limit=None, key="news_refresher")
+# Auto-refresh every 15 seconds
+st_autorefresh(interval=15_000, limit=None, key="dashboard_refresher")
