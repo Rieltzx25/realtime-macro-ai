@@ -35,7 +35,7 @@ st.markdown("""
         font-size: 12px;
     }
     .crypto-card {
-        background-color: #000000; /* Gray background for crypto cards */
+        background-color: #000000; /* Black background for crypto cards */
         padding: 15px;
         border-radius: 10px;
         text-align: center;
@@ -49,7 +49,7 @@ st.markdown("""
         color: #FFD700; /* Yellow for Bitcoin name */
     }
     .crypto-name.ethereum, .crypto-name.solana {
-        color: #FFFFFF; /* Dark blue-gray for Ethereum and Solana */
+        color: #FFFFFF; /* White for Ethereum and Solana */
     }
     .crypto-price {
         font-size: 18px;
@@ -111,8 +111,12 @@ def get_crypto_prices():
                 prices[coin]["usd"] = r[coin].get("usd", 0)
                 prices[coin]["usd_24h_change"] = r[coin].get("usd_24h_change", 0)
     except Exception as e:
-        st.error(f"Failed to fetch crypto prices: {e}")
+        st.warning(f"Failed to fetch crypto prices: {e} - Using last known values.")
     return prices
+
+# Initialize session state for crypto prices if not already set
+if 'crypto_prices' not in st.session_state:
+    st.session_state.crypto_prices = get_crypto_prices()
 
 # --------------------------------------
 # Daftar RSS Feeds dan Features
@@ -171,8 +175,7 @@ elif section == "Features":
 # --------------------------------------
 st.title("🚀 Realtime Macro & Crypto Dashboard")
 
-# Harga Crypto (selalu ditampilkan)
-crypto_prices = get_crypto_prices()
+# Harga Crypto (selalu ditampilkan using session state)
 st.subheader("Live Crypto Prices")
 col1, col2, col3 = st.columns(3)
 cryptos = [
@@ -182,8 +185,8 @@ cryptos = [
 ]
 for col, (name, key) in zip([col1, col2, col3], cryptos):
     with col:
-        price = crypto_prices[key]['usd']
-        change = crypto_prices[key]['usd_24h_change']
+        price = st.session_state.crypto_prices[key]['usd']
+        change = st.session_state.crypto_prices[key]['usd_24h_change']
         change_class = 'negative' if change < 0 else 'positive'
         name_class = 'bitcoin' if 'Bitcoin' in name else ('ethereum' if 'Ethereum' in name else 'solana')
         st.markdown(f"""
@@ -193,6 +196,9 @@ for col, (name, key) in zip([col1, col2, col3], cryptos):
             <p class='crypto-change {change_class}'>{change:.2f}%</p>
         </div>
         """, unsafe_allow_html=True)
+
+# Auto-refresh to update prices every 15 seconds
+st_autorefresh(interval=15_000, limit=None, key="price_refresher", on_refresh=lambda: st.session_state.update({'crypto_prices': get_crypto_prices()}))
 
 st.info("🔄 Data refreshes automatically every 15 seconds.")
 
@@ -251,6 +257,3 @@ elif section == "Features":
     elif feature_choice == "Bitcoin Rainbow Chart":
         st.subheader("Bitcoin Rainbow Chart")
         st.components.v1.iframe("https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/", height=600, scrolling=True)
-
-# Auto-refresh 15 detik
-st_autorefresh(interval=15_000, limit=None, key="news_refresher")
