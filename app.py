@@ -47,6 +47,7 @@ st.markdown("""
     }
     .crypto-name.bitcoin {
         color: #FFD700; /* Yellow for Bitcoin name */
+        background-color: #000000;
     }
     .crypto-name.ethereum, .crypto-name.solana {
         color: #FFFFFF; /* White for Ethereum and Solana */
@@ -114,9 +115,17 @@ def get_crypto_prices():
         st.warning(f"Failed to fetch crypto prices: {e} - Using last known values.")
     return prices
 
-# Initialize session state for crypto prices if not already set
+# Initialize session state for crypto prices and last refresh time
 if 'crypto_prices' not in st.session_state:
     st.session_state.crypto_prices = get_crypto_prices()
+if 'last_price_refresh' not in st.session_state:
+    st.session_state.last_price_refresh = time.time()
+
+# Check if 15 seconds have passed since the last refresh
+current_time = time.time()
+if current_time - st.session_state.last_price_refresh >= 15:
+    st.session_state.crypto_prices = get_crypto_prices()
+    st.session_state.last_price_refresh = current_time
 
 # --------------------------------------
 # Daftar RSS Feeds dan Features
@@ -197,9 +206,6 @@ for col, (name, key) in zip([col1, col2, col3], cryptos):
         </div>
         """, unsafe_allow_html=True)
 
-# Auto-refresh to update prices every 15 seconds
-st_autorefresh(interval=15_000, limit=None, key="price_refresher", on_refresh=lambda: st.session_state.update({'crypto_prices': get_crypto_prices()}))
-
 st.info("🔄 Data refreshes automatically every 15 seconds.")
 
 # Fungsi tampil berita
@@ -257,3 +263,6 @@ elif section == "Features":
     elif feature_choice == "Bitcoin Rainbow Chart":
         st.subheader("Bitcoin Rainbow Chart")
         st.components.v1.iframe("https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/", height=600, scrolling=True)
+
+# Auto-refresh the entire app every 15 seconds
+st_autorefresh(interval=15_000, limit=None, key="price_refresher")
