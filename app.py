@@ -89,7 +89,7 @@ def fetch_news(url, max_entries=5):
     return news_data
 
 # --------------------------------------
-# Fungsi ambil harga crypto with enhanced debugging
+# Fungsi ambil harga crypto
 # --------------------------------------
 def get_crypto_prices():
     prices = {
@@ -116,9 +116,17 @@ def get_crypto_prices():
         st.error(f"API Error: {e} - Using last known values.")
     return prices
 
-# Initialize session state for crypto prices
+# Initialize session state for crypto prices and last refresh time
 if 'crypto_prices' not in st.session_state:
     st.session_state.crypto_prices = get_crypto_prices()
+if 'last_price_refresh' not in st.session_state:
+    st.session_state.last_price_refresh = time.time()
+
+# Check if 15 seconds have passed since the last refresh
+current_time = time.time()
+if current_time - st.session_state.last_price_refresh >= 15:
+    st.session_state.crypto_prices = get_crypto_prices()
+    st.session_state.last_price_refresh = current_time
 
 # --------------------------------------
 # Daftar RSS Feeds dan Features
@@ -177,7 +185,7 @@ elif section == "Features":
 # --------------------------------------
 st.title("🚀 Realtime Macro & Crypto Dashboard")
 
-# Harga Crypto with manual refresh
+# Harga Crypto with automatic refresh
 st.subheader("Live Crypto Prices")
 col1, col2, col3 = st.columns(3)
 cryptos = [
@@ -199,11 +207,7 @@ for col, (name, key) in zip([col1, col2, col3], cryptos):
         </div>
         """, unsafe_allow_html=True)
 
-if st.button("Refresh Crypto Prices"):
-    st.session_state.crypto_prices = get_crypto_prices()
-    st.success("Prices refreshed!")
-
-st.info("🔄 Click 'Refresh Crypto Prices' to update data manually.")
+st.info("🔄 Data refreshes automatically every 15 seconds.")
 
 # Fungsi tampil berita
 def display_news_items(news_list):
@@ -254,15 +258,10 @@ elif section == "Features":
         st.subheader("Fear and Greed Index")
         st.warning("Iframe is blocked by the site. Click the link below to view.")
         st.link_button("Visit Fear and Greed Index", "https://alternative.me/crypto/fear-and-greed-index/")
-        # Optional: Upload static image if available
-        uploaded_file = st.file_uploader("Upload Fear and Greed Index screenshot (PNG/JPG)", type=["png", "jpg", "jpeg"])
-        if uploaded_file is not None:
-            st.image(uploaded_file, caption="Fear and Greed Index Snapshot", use_column_width=True)
     elif feature_choice == "Bitcoin Rainbow Chart":
         st.subheader("Bitcoin Rainbow Chart")
         st.warning("Iframe is blocked by the site. Click the link below to view.")
         st.link_button("Visit Bitcoin Rainbow Chart", "https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/")
-        # Optional: Upload static image if available
-        uploaded_file = st.file_uploader("Upload Bitcoin Rainbow Chart screenshot (PNG/JPG)", type=["png", "jpg", "jpeg"])
-        if uploaded_file is not None:
-            st.image(uploaded_file, caption="Bitcoin Rainbow Chart Snapshot", use_column_width=True)
+
+# Auto-refresh the entire app every 15 seconds
+st_autorefresh(interval=15_000, limit=None, key="price_refresher")
