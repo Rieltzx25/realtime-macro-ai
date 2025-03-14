@@ -101,22 +101,16 @@ def get_crypto_prices():
         "https://api.coingecko.com/api/v3/simple/price"
         "?ids=bitcoin,ethereum,solana"
         "&vs_currencies=usd"
-        "&include_24h_change=true"
+        "&include_24hr_change=true"
     )
-    headers = {"User-Agent": "MyCryptoApp/1.0 (https://yourdomain.com)"}
     try:
-        time.sleep(2)  # Add delay to respect rate limit
-        r = requests.get(url, headers=headers, timeout=10).json()
-        # Temporary debugging to check full response
-        # st.write("API Response:", r)  # Uncomment if further debugging is needed
+        r = requests.get(url, timeout=5).json()
         for coin in prices:
             if coin in r:
                 prices[coin]["usd"] = r[coin].get("usd", 0)
                 prices[coin]["usd_24h_change"] = r[coin].get("usd_24h_change", 0)
-                if "usd_24h_change" not in r[coin]:
-                    st.warning(f"No 24h change data available for {coin}")
     except Exception as e:
-        st.error(f"API Error: {e} - Using last known values.")
+        print("CoinGecko API error:", e)
     return prices
 
 # Initialize session state for crypto prices and last refresh time
