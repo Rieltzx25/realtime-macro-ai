@@ -173,7 +173,7 @@ FEATURES = ["Fear and Greed Index", "Bitcoin Rainbow Chart"]
 # Cek apakah file cat.logo.webp ada
 logo_path = "cat_logo.webp"
 if os.path.exists(logo_path):
-    st.sidebar.image(logo_path, use_container_width=False, width=200)
+    st.sidebar.image(logo_path, use_container_width=False, width=150)
 else:
     st.sidebar.error(f"File {logo_path} tidak ditemukan. Pastikan file ada di direktori utama repositori.")
 
