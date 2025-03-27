@@ -81,22 +81,26 @@ st.markdown("""
 # Fungsi ambil berita dari RSS (User-Agent)
 # --------------------------------------
 def fetch_news(url, max_entries=5):
-    resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-    if resp.status_code != 200:
-        return []
-    feed = feedparser.parse(resp.text)
+    try:
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+        resp.raise_for_status()
+        feed = feedparser.parse(resp.text)
 
-    news_data = []
-    for entry in feed.entries[:max_entries]:
-        published_time = time.mktime(entry.published_parsed) if hasattr(entry, "published_parsed") else 0
-        summary = entry.summary[:300] + "..." if hasattr(entry, 'summary') and entry.summary else "No summary available."
-        news_data.append({
-            "title": entry.title,
-            "link": entry.link,
-            "summary": summary,
-            "published_time": published_time
-        })
-    return news_data
+        news_data = []
+        for entry in feed.entries[:max_entries]:
+            published_time = time.mktime(entry.published_parsed) if hasattr(entry, "published_parsed") else 0
+            summary = entry.summary[:300] + "..." if hasattr(entry, 'summary') and entry.summary else "No summary available."
+            news_data.append({
+                "title": entry.title,
+                "link": entry.link,
+                "summary": summary,
+                "published_time": published_time
+            })
+        return news_data
+    except requests.exceptions.RequestException as e:
+        print(f"RSS fetch error: {url} - {e}")
+        return []
+
 
 # --------------------------------------
 # Fungsi ambil harga crypto dengan debugging untuk perubahan harian
