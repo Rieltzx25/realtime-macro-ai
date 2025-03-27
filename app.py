@@ -98,7 +98,7 @@ st.markdown("""
         color: #00FF00 !important;
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
     }
-    /* Styling untuk jam */
+    /* Styling untuk jam di ujung kiri bawah */
     .clock-container {
         position: fixed;
         bottom: 20px;
@@ -114,11 +114,32 @@ st.markdown("""
         background-clip: padding-box, border-box;
         color: #FFFFFF;
         font-size: 14px;
-        z-index: 1000;
+        z-index: 10000;
+    }
+    /* Styling untuk jam di sidebar */
+    .sidebar-clock-container {
+        background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+        padding: 10px 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        border: 1px solid transparent;
+        background-image: linear-gradient(#1a1a1a, #1a1a1a), 
+                          linear-gradient(45deg, #00FF00, #FFD700);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+        color: #FFFFFF;
+        font-size: 14px;
+        margin-top: 20px;
     }
     .clock-text {
         margin: 2px 0;
         color: #CCCCCC;
+    }
+    /* Media query untuk desktop */
+    @media (min-width: 768px) {
+        .clock-container {
+            left: 250px; /* Geser ke kanan agar tidak tertutup sidebar */
+        }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -126,15 +147,15 @@ st.markdown("""
 # --------------------------------------
 # Fungsi untuk menampilkan jam menggunakan JavaScript
 # --------------------------------------
-def display_clock():
-    clock_html = """
-    <div class='clock-container' id='clock'>
-        <div class='clock-text' id='date'></div>
-        <div class='clock-text' id='utc'></div>
-        <div class='clock-text' id='wib'></div>
+def display_clock(container="clock"):
+    clock_html = f"""
+    <div class='{container}' id='{container}'>
+        <div class='clock-text' id='date-{container}'></div>
+        <div class='clock-text' id='utc-{container}'></div>
+        <div class='clock-text' id='wib-{container}'></div>
     </div>
     <script>
-    function updateClock() {
+    function updateClock_{container}() {{
         const now = new Date();
         // UTC time
         const utc = now.toUTCString().split(' ')[4] + ' UTC';
@@ -145,15 +166,15 @@ def display_clock():
         // Tanggal
         const dateStr = now.toUTCString().split(' ').slice(0, 4).join(' ');
         
-        document.getElementById('date').innerText = dateStr;
-        document.getElementById('utc').innerText = utc;
-        document.getElementById('wib').innerText = wibStr;
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
+        document.getElementById('date-{container}').innerText = dateStr;
+        document.getElementById('utc-{container}').innerText = utc;
+        document.getElementById('wib-{container}').innerText = wibStr;
+    }}
+    updateClock_{container}();
+    setInterval(updateClock_{container}, 1000);
     </script>
     """
-    st.markdown(clock_html, unsafe_allow_html=True)
+    return clock_html
 
 # --------------------------------------
 # Fungsi ambil berita dari RSS (User-Agent)
@@ -270,7 +291,7 @@ NEWS_SOURCES = {k: v for k, v in RSS_FEEDS.items() if v is not None}
 FEATURES = ["Fear and Greed Index", "Bitcoin Rainbow Chart"]
 
 # --------------------------------------
-# Sidebar: Pilih Section dengan Logo
+# Sidebar: Pilih Section dengan Logo dan Jam
 # --------------------------------------
 logo_path = "cat_logo.webp"
 if os.path.exists(logo_path):
@@ -285,6 +306,9 @@ if section == "News Feed":
     feed_choice = st.sidebar.selectbox("Pilih sumber berita", list(NEWS_SOURCES.keys()))
 elif section == "Features":
     feature_choice = st.sidebar.selectbox("Pilih fitur", FEATURES)
+
+# Tambahkan jam di sidebar
+st.sidebar.markdown(display_clock(container="sidebar-clock"), unsafe_allow_html=True)
 
 # --------------------------------------
 # Title
@@ -370,9 +394,9 @@ elif section == "Features":
         st.link_button("Visit Bitcoin Rainbow Chart", "https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/")
 
 # --------------------------------------
-# Tampilkan jam
+# Tampilkan jam di ujung kiri bawah
 # --------------------------------------
-display_clock()
+st.markdown(display_clock(container="clock"), unsafe_allow_html=True)
 
 # Auto-refresh the entire app every 15 seconds
 st_autorefresh(interval=15_000, limit=None, key="price_refresher")
