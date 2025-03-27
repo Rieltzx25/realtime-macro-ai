@@ -3,7 +3,6 @@ import feedparser
 import requests
 import time
 from datetime import datetime
-import pytz  # Untuk zona waktu
 from streamlit_autorefresh import st_autorefresh
 import os
 
@@ -14,7 +13,7 @@ st.markdown("""
     <style>
     .main {
         background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
-        position: relative; /* Untuk posisi absolut clock */
+        position: relative;
     }
     .news-card {
         background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
@@ -115,7 +114,7 @@ st.markdown("""
         background-clip: padding-box, border-box;
         color: #FFFFFF;
         font-size: 14px;
-        z-index: 1000; /* Pastikan di atas elemen lain */
+        z-index: 1000;
     }
     .clock-text {
         margin: 2px 0;
@@ -125,40 +124,36 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --------------------------------------
-# Fungsi untuk mendapatkan waktu WIB dan UTC
-# --------------------------------------
-def get_current_time():
-    # Zona waktu UTC
-    utc_zone = pytz.UTC
-    utc_time = datetime.now(utc_zone)
-    
-    # Zona waktu WIB (UTC+7)
-    wib_zone = pytz.timezone('Asia/Jakarta')  # WIB adalah Asia/Jakarta
-    wib_time = utc_time.astimezone(wib_zone)
-    
-    # Format tanggal dan waktu
-    date_str = utc_time.strftime("%a, %d %b %Y")
-    utc_str = utc_time.strftime("%H:%M:%S UTC")
-    wib_str = wib_time.strftime("%H:%M:%S WIB")
-    
-    return date_str, utc_str, wib_str
-
-# --------------------------------------
-# Fungsi untuk menampilkan jam secara real-time
+# Fungsi untuk menampilkan jam menggunakan JavaScript
 # --------------------------------------
 def display_clock():
-    clock_placeholder = st.empty()
-    while True:
-        date_str, utc_str, wib_str = get_current_time()
-        clock_html = f"""
-        <div class='clock-container'>
-            <div class='clock-text'>{date_str}</div>
-            <div class='clock-text'>{utc_str}</div>
-            <div class='clock-text'>{wib_str}</div>
-        </div>
-        """
-        clock_placeholder.markdown(clock_html, unsafe_allow_html=True)
-        time.sleep(1)  # Update setiap detik
+    clock_html = """
+    <div class='clock-container' id='clock'>
+        <div class='clock-text' id='date'></div>
+        <div class='clock-text' id='utc'></div>
+        <div class='clock-text' id='wib'></div>
+    </div>
+    <script>
+    function updateClock() {
+        const now = new Date();
+        // UTC time
+        const utc = now.toUTCString().split(' ')[4] + ' UTC';
+        // WIB time (UTC+7)
+        const wibOffset = 7 * 60 * 60 * 1000; // 7 jam dalam milidetik
+        const wib = new Date(now.getTime() + wibOffset);
+        const wibStr = wib.toISOString().substr(11, 8) + ' WIB';
+        // Tanggal
+        const dateStr = now.toUTCString().split(' ').slice(0, 4).join(' ');
+        
+        document.getElementById('date').innerText = dateStr;
+        document.getElementById('utc').innerText = utc;
+        document.getElementById('wib').innerText = wibStr;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+    </script>
+    """
+    st.markdown(clock_html, unsafe_allow_html=True)
 
 # --------------------------------------
 # Fungsi ambil berita dari RSS (User-Agent)
@@ -375,16 +370,9 @@ elif section == "Features":
         st.link_button("Visit Bitcoin Rainbow Chart", "https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/")
 
 # --------------------------------------
-# Jalankan jam di background
+# Tampilkan jam
 # --------------------------------------
-# Untuk menjalankan jam tanpa mengganggu auto-refresh utama, kita gunakan st.experimental_rerun
-# Namun, karena loop while akan memblokir, kita gunakan pendekatan lain dengan auto-refresh
-if 'clock_running' not in st.session_state:
-    st.session_state.clock_running = False
-
-if not st.session_state.clock_running:
-    st.session_state.clock_running = True
-    display_clock()
+display_clock()
 
 # Auto-refresh the entire app every 15 seconds
 st_autorefresh(interval=15_000, limit=None, key="price_refresher")
