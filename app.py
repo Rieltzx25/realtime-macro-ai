@@ -3,6 +3,7 @@ import feedparser
 import requests
 import time
 from datetime import datetime
+import pytz  # Untuk zona waktu
 from streamlit_autorefresh import st_autorefresh
 import os
 
@@ -13,6 +14,7 @@ st.markdown("""
     <style>
     .main {
         background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
+        position: relative; /* Untuk posisi absolut clock */
     }
     .news-card {
         background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
@@ -97,8 +99,66 @@ st.markdown("""
         color: #00FF00 !important;
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
     }
+    /* Styling untuk jam */
+    .clock-container {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+        padding: 10px 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        border: 1px solid transparent;
+        background-image: linear-gradient(#1a1a1a, #1a1a1a), 
+                          linear-gradient(45deg, #00FF00, #FFD700);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+        color: #FFFFFF;
+        font-size: 14px;
+        z-index: 1000; /* Pastikan di atas elemen lain */
+    }
+    .clock-text {
+        margin: 2px 0;
+        color: #CCCCCC;
+    }
     </style>
 """, unsafe_allow_html=True)
+
+# --------------------------------------
+# Fungsi untuk mendapatkan waktu WIB dan UTC
+# --------------------------------------
+def get_current_time():
+    # Zona waktu UTC
+    utc_zone = pytz.UTC
+    utc_time = datetime.now(utc_zone)
+    
+    # Zona waktu WIB (UTC+7)
+    wib_zone = pytz.timezone('Asia/Jakarta')  # WIB adalah Asia/Jakarta
+    wib_time = utc_time.astimezone(wib_zone)
+    
+    # Format tanggal dan waktu
+    date_str = utc_time.strftime("%a, %d %b %Y")
+    utc_str = utc_time.strftime("%H:%M:%S UTC")
+    wib_str = wib_time.strftime("%H:%M:%S WIB")
+    
+    return date_str, utc_str, wib_str
+
+# --------------------------------------
+# Fungsi untuk menampilkan jam secara real-time
+# --------------------------------------
+def display_clock():
+    clock_placeholder = st.empty()
+    while True:
+        date_str, utc_str, wib_str = get_current_time()
+        clock_html = f"""
+        <div class='clock-container'>
+            <div class='clock-text'>{date_str}</div>
+            <div class='clock-text'>{utc_str}</div>
+            <div class='clock-text'>{wib_str}</div>
+        </div>
+        """
+        clock_placeholder.markdown(clock_html, unsafe_allow_html=True)
+        time.sleep(1)  # Update setiap detik
 
 # --------------------------------------
 # Fungsi ambil berita dari RSS (User-Agent)
@@ -313,6 +373,18 @@ elif section == "Features":
         st.subheader("Bitcoin Rainbow Chart")
         st.warning("Iframe is blocked by the site. Click the link below to view.")
         st.link_button("Visit Bitcoin Rainbow Chart", "https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/")
+
+# --------------------------------------
+# Jalankan jam di background
+# --------------------------------------
+# Untuk menjalankan jam tanpa mengganggu auto-refresh utama, kita gunakan st.experimental_rerun
+# Namun, karena loop while akan memblokir, kita gunakan pendekatan lain dengan auto-refresh
+if 'clock_running' not in st.session_state:
+    st.session_state.clock_running = False
+
+if not st.session_state.clock_running:
+    st.session_state.clock_running = True
+    display_clock()
 
 # Auto-refresh the entire app every 15 seconds
 st_autorefresh(interval=15_000, limit=None, key="price_refresher")
