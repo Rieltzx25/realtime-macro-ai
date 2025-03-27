@@ -35,11 +35,20 @@ st.markdown("""
         font-size: 12px;
     }
     .crypto-card {
-        background-color: #000000;
-        padding: 15px;
-        border-radius: 10px;
-        text-align: center;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    background: linear-gradient(135deg, #232526 0%, #414345 100%);
+    transition: transform 0.2s ease;
+}
+.crypto-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+.news-card {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.news-card:hover {
+    box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+    transform: translateY(-3px);
+
     }
     .crypto-name {
         font-size: 20px;
