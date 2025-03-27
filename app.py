@@ -35,12 +35,20 @@ st.markdown("""
         font-size: 12px;
     }
     .crypto-card {
-    background: linear-gradient(135deg, #232526 0%, #414345 100%);
-    transition: transform 0.2s ease;
+    background-color: #000000;
+    padding: 15px;
+    border-radius: 20px; /* Sudut lebih bulat */
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow lebih lembut */
+    border: 1px solid transparent; /* Untuk gradient border */
+    background-image: linear-gradient(#000000, #000000), 
+                      linear-gradient(45deg, #FFD700, #00FF00); /* Gradient border */
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    transition: transform 0.2s ease-in-out; /* Efek hover */
 }
 .crypto-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+    transform: scale(1.02); /* Efek zoom saat hover */
 }
 .news-card {
     transition: box-shadow 0.2s ease, transform 0.2s ease;
