@@ -5,6 +5,8 @@ import time
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 import os
+import plotly.graph_objects as go
+import numpy as np
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
@@ -88,6 +90,22 @@ def fetch_news(url, max_entries=5):
             "published_time": published_time
         })
     return news_data
+
+# Contoh membuat sparkline harga crypto
+def plot_sparkline():
+    data = np.random.rand(24)  # Data sementara, ganti dengan data asli API
+    fig = go.Figure(go.Scatter(y=data, mode='lines', line=dict(color="#00ff00")))
+    fig.update_layout(xaxis=dict(visible=False),
+                      yaxis=dict(visible=False),
+                      margin=dict(l=0, r=0, t=0, b=0),
+                      height=40)
+    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+
+# panggil setelah tiap crypto card
+plot_sparkline()
+@st.cache_data(ttl=30)
+def get_crypto_prices():
+    # kode sebelumnya
 
 # --------------------------------------
 # Fungsi ambil harga crypto dengan debugging untuk perubahan harian
