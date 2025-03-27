@@ -12,19 +12,30 @@ st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="
 st.markdown("""
     <style>
     .main {
-        background-color: #1e1e2f;
+        background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
     }
     .news-card {
-        background-color: #000000;
+        background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
         padding: 15px;
-        border-radius: 10px;
+        border-radius: 15px;
         margin-bottom: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        border: 1px solid transparent;
+        background-image: linear-gradient(#1a1a1a, #1a1a1a), 
+                          linear-gradient(45deg, #FF4500, #FFD700);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .news-card:hover {
+        box-shadow: 0 6px 12px rgba(255, 255, 255, 0.15);
+        transform: translateY(-3px);
     }
     .news-headline {
         color: #FFFFFF;
         font-size: 20px;
         font-weight: bold;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
     }
     .news-summary {
         color: #CCCCCC;
@@ -35,28 +46,20 @@ st.markdown("""
         font-size: 12px;
     }
     .crypto-card {
-    background-color: #000000;
-    padding: 15px;
-    border-radius: 20px; /* Sudut lebih bulat */
-    text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow lebih lembut */
-    border: 1px solid transparent; /* Untuk gradient border */
-    background-image: linear-gradient(#000000, #000000), 
-                      linear-gradient(45deg, #FFD700, #00FF00); /* Gradient border */
-    background-origin: border-box;
-    background-clip: padding-box, border-box;
-    transition: transform 0.2s ease-in-out; /* Efek hover */
-}
-.crypto-card:hover {
-    transform: scale(1.02); /* Efek zoom saat hover */
-}
-.news-card {
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-}
-.news-card:hover {
-    box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
-    transform: translateY(-3px);
-
+        background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+        padding: 15px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        border: 1px solid transparent;
+        background-image: linear-gradient(#1a1a1a, #1a1a1a), 
+                          linear-gradient(45deg, #FFD700, #00FF00);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+        transition: transform 0.2s ease-in-out;
+    }
+    .crypto-card:hover {
+        transform: scale(1.02);
     }
     .crypto-name {
         font-size: 20px;
@@ -81,6 +84,18 @@ st.markdown("""
     }
     .crypto-change.positive {
         color: #00FF00;
+    }
+    .stSidebar {
+        background: linear-gradient(180deg, #2a2a4a 0%, #1e1e2f 100%);
+        border-right: 1px solid #FFD700;
+    }
+    h1 {
+        color: #FFD700 !important;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    h2 {
+        color: #00FF00 !important;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -109,9 +124,8 @@ def fetch_news(url, max_entries=5):
         print(f"RSS fetch error: {url} - {e}")
         return []
 
-
 # --------------------------------------
-# Fungsi ambil harga crypto dengan debugging untuk perubahan harian
+# Fungsi ambil harga crypto
 # --------------------------------------
 def get_crypto_prices():
     prices = {
@@ -203,7 +217,6 @@ FEATURES = ["Fear and Greed Index", "Bitcoin Rainbow Chart"]
 # --------------------------------------
 # Sidebar: Pilih Section dengan Logo
 # --------------------------------------
-# Cek apakah file cat.logo.webp ada
 logo_path = "cat_logo.webp"
 if os.path.exists(logo_path):
     st.sidebar.image(logo_path, use_container_width=False, width=150)
