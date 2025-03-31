@@ -270,6 +270,67 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Initialize session state for crypto prices and last refresh time
+if 'crypto_prices' not in st.session_state:
+    st.session_state.crypto_prices = get_crypto_prices()
+if 'last_price_refresh' not in st.session_state:
+    st.session_state.last_price_refresh = time.time()
+
+# Check if 15 seconds have passed since the last refresh
+current_time = time.time()
+if current_time - st.session_state.last_price_refresh >= 15:
+    st.session_state.crypto_prices = get_crypto_prices()
+    st.session_state.last_price_refresh = current_time
+
+# --------------------------------------
+# Sidebar Setup
+# --------------------------------------
+logo_path = "cat_logo.webp"
+if os.path.exists(logo_path):
+    st.sidebar.image(logo_path, use_container_width=False, width=150)
+else:
+    st.sidebar.error(f"File {logo_path} tidak ditemukan. Pastikan file ada di direktori utama repositori.")
+
+st.sidebar.header("NAVIGATION")
+section = st.sidebar.radio("CHOOSE SECTION", ["News Feed", "Features"])
+
+# Add search functionality for news (moved up)
+st.sidebar.markdown("### 🔍 Search News")
+search_term = st.sidebar.text_input("Enter keywords to filter news", "")
+
+if section == "News Feed":
+    feed_choice = st.sidebar.selectbox("SELECT NEWS SOURCE", list(NEWS_SOURCES.keys()))
+elif section == "Features":
+    feature_choice = st.sidebar.selectbox("SELECT FEATURE", FEATURES)
+
+# Add help text for features
+with st.sidebar.expander("ℹ️ How to Use"):
+    st.markdown("""
+    **Quick Guide:**
+    1. Use the navigation radio buttons to switch between News and Features
+    2. Select news sources from the dropdown menu
+    3. Use the search box to filter news by keywords
+    4. Click on news headlines to read full articles
+    5. Watch the auto-updating crypto prices
+    """)
+
+# Add market summary
+with st.sidebar.expander("📊 Market Summary"):
+    st.markdown("""
+    **24h Market Overview:**
+    - Total Market Cap: $2.34T
+    - 24h Volume: $98.2B
+    - BTC Dominance: 52.3%
+    """)
+
+# Tambahkan jam di sidebar
+st.sidebar.markdown(display_clock(container="sidebar-clock"), unsafe_allow_html=True)
+
+# --------------------------------------
+# Main Content
+# --------------------------------------
+st.title("🚀 CRYPTO TERMINAL PRO")
+
 # Display welcome message and help
 if 'show_welcome' not in st.session_state:
     st.session_state.show_welcome = True
@@ -290,6 +351,9 @@ if st.session_state.show_welcome:
     if st.button("Don't show this again"):
         st.session_state.show_welcome = False
         st.rerun()
+
+# Display crypto prices
+display_crypto_prices()
 
 # --------------------------------------
 # Fungsi untuk menampilkan jam menggunakan JavaScript
@@ -422,18 +486,6 @@ def display_crypto_prices():
         </div>
     """.format(datetime.now().strftime("%H:%M:%S")), unsafe_allow_html=True)
 
-# Initialize session state for crypto prices and last refresh time
-if 'crypto_prices' not in st.session_state:
-    st.session_state.crypto_prices = get_crypto_prices()
-if 'last_price_refresh' not in st.session_state:
-    st.session_state.last_price_refresh = time.time()
-
-# Check if 15 seconds have passed since the last refresh
-current_time = time.time()
-if current_time - st.session_state.last_price_refresh >= 15:
-    st.session_state.crypto_prices = get_crypto_prices()
-    st.session_state.last_price_refresh = current_time
-
 # --------------------------------------
 # Daftar RSS Feeds dan Features
 # --------------------------------------
@@ -488,34 +540,6 @@ NEWS_SOURCES = {k: v for k, v in RSS_FEEDS.items() if v is not None}
 FEATURES = ["Fear and Greed Index", "Bitcoin Rainbow Chart"]
 
 # --------------------------------------
-# Sidebar: Pilih Section dengan Logo dan Jam
-# --------------------------------------
-logo_path = "cat_logo.webp"
-if os.path.exists(logo_path):
-    st.sidebar.image(logo_path, use_container_width=False, width=150)
-else:
-    st.sidebar.error(f"File {logo_path} tidak ditemukan. Pastikan file ada di direktori utama repositori.")
-
-st.sidebar.header("NAVIGATION")
-section = st.sidebar.radio("CHOOSE SECTION", ["News Feed", "Features"])
-
-if section == "News Feed":
-    feed_choice = st.sidebar.selectbox("SELECT NEWS SOURCE", list(NEWS_SOURCES.keys()))
-elif section == "Features":
-    feature_choice = st.sidebar.selectbox("SELECT FEATURE", FEATURES)
-
-# Tambahkan jam di sidebar
-st.sidebar.markdown(display_clock(container="sidebar-clock"), unsafe_allow_html=True)
-
-# --------------------------------------
-# Title
-# --------------------------------------
-st.title("🚀 CRYPTO TERMINAL PRO")
-
-# Update the crypto display section
-display_crypto_prices()
-
-# --------------------------------------
 # Fungsi tampil berita
 # --------------------------------------
 def display_news_items(news_list):
@@ -557,14 +581,17 @@ def display_news_items(news_list):
 # --------------------------------------
 if section == "News Feed":
     if feed_choice == "NEWEST":
-        all_news = []
-        for feed_url in NEWS_SOURCES["NEWEST"]:
-            all_news.extend(fetch_news(feed_url, max_entries=3))
-        all_news.sort(key=lambda x: x["published_time"], reverse=True)
+        with st.spinner('Fetching latest news from multiple sources...'):
+            all_news = []
+            for feed_url in NEWS_SOURCES["NEWEST"]:
+                all_news.extend(fetch_news(feed_url, max_entries=3))
+            all_news.sort(key=lambda x: x["published_time"], reverse=True)
     else:
-        feed_url = NEWS_SOURCES[feed_choice]
-        all_news = fetch_news(feed_url, max_entries=10)
-        all_news.sort(key=lambda x: x["published_time"], reverse=True)
+        with st.spinner('Fetching news...'):
+            feed_url = NEWS_SOURCES[feed_choice]
+            all_news = fetch_news(feed_url, max_entries=10)
+            all_news.sort(key=lambda x: x["published_time"], reverse=True)
+    
     st.subheader(f"🔥 LATEST NEWS - {feed_choice}")
     display_news_items(all_news)
 elif section == "Features":
@@ -577,37 +604,8 @@ elif section == "Features":
         st.warning("Iframe is blocked by the site. Click the link below to view.")
         st.link_button("VISIT BITCOIN RAINBOW CHART", "https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/")
 
-# --------------------------------------
-# Tampilkan jam di ujung kiri bawah
-# --------------------------------------
+# Display clock at the bottom
 st.markdown(display_clock(container="clock"), unsafe_allow_html=True)
-
-# Auto-refresh the entire app every 15 seconds
-st_autorefresh(interval=15_000, limit=None, key="price_refresher")
-
-# Add search functionality for news
-st.sidebar.markdown("### 🔍 Search News")
-search_term = st.sidebar.text_input("Enter keywords to filter news", "")
-
-# Add help text for features
-with st.sidebar.expander("ℹ️ How to Use"):
-    st.markdown("""
-    **Quick Guide:**
-    1. Use the navigation radio buttons to switch between News and Features
-    2. Select news sources from the dropdown menu
-    3. Use the search box to filter news by keywords
-    4. Click on news headlines to read full articles
-    5. Watch the auto-updating crypto prices
-    """)
-
-# Add market summary
-with st.sidebar.expander("📊 Market Summary"):
-    st.markdown("""
-    **24h Market Overview:**
-    - Total Market Cap: $2.34T
-    - 24h Volume: $98.2B
-    - BTC Dominance: 52.3%
-    """)
 
 # Footer
 st.markdown("---")
@@ -615,4 +613,7 @@ st.markdown("""
 <div style='text-align: center; color: #7fff7f; font-size: 12px;'>
     Made with 💚 by Your Name | Data provided by CoinGecko and various news sources
 </div>
-""", unsafe_allow_html=True) 
+""", unsafe_allow_html=True)
+
+# Auto-refresh the entire app every 15 seconds
+st_autorefresh(interval=15_000, limit=None, key="price_refresher") 
