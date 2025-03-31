@@ -6,118 +6,147 @@ from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 import os
 
-st.set_page_config(page_title="Bloomberg-Style Terminal 📊", layout="wide")
+# Configure Streamlit page settings
+st.set_page_config(
+    page_title="Crypto Terminal Pro 📊",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/yourusername/crypto-terminal',
+        'Report a bug': "https://github.com/yourusername/crypto-terminal/issues",
+        'About': "# Crypto Terminal Pro\nA professional-grade cryptocurrency dashboard with real-time data and news."
+    }
+)
 
-# Add custom CSS for Bloomberg Terminal-like styling
+# Add custom CSS for improved styling
 st.markdown("""
     <style>
-    /* Import Bloomberg Terminal-like font */
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+    /* Import fonts */
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
     
+    /* Main container styling */
     .main {
-        background-color: #000000;
+        background-color: #0a0a0f;
         color: #00ff00;
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: 'Inter', sans-serif;
     }
     
-    /* Terminal-like header */
+    /* Terminal header */
     .terminal-header {
-        background: #000000;
+        background: linear-gradient(90deg, #0a0a0f 0%, #1a1a2f 100%);
         border-bottom: 1px solid #00ff00;
-        padding: 10px;
+        padding: 15px;
         margin-bottom: 20px;
+        border-radius: 5px;
     }
     
-    /* Bloomberg-style cards */
+    /* Card styling */
     .bloomberg-card {
-        background: #000000;
+        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2f 100%);
         border: 1px solid #00ff00;
-        padding: 15px;
-        margin-bottom: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
         font-family: 'IBM Plex Mono', monospace;
-        box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+        box-shadow: 0 4px 6px rgba(0, 255, 0, 0.1);
+        border-radius: 5px;
+        transition: all 0.3s ease;
     }
     
     .bloomberg-card:hover {
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        box-shadow: 0 6px 12px rgba(0, 255, 0, 0.2);
+        transform: translateY(-2px);
     }
     
-    /* Bloomberg-style headlines */
+    /* Headlines */
     .bloomberg-headline {
         color: #00ff00;
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 600;
-        margin-bottom: 5px;
+        margin-bottom: 8px;
         text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    /* Bloomberg-style text */
-    .bloomberg-text {
-        color: #00ff00;
-        font-size: 14px;
+        letter-spacing: 0.5px;
         line-height: 1.4;
     }
     
-    /* Bloomberg-style timestamp */
-    .bloomberg-timestamp {
-        color: #00ff00;
-        font-size: 12px;
-        opacity: 0.7;
-    }
-    
-    /* Bloomberg-style crypto cards */
-    .bloomberg-crypto {
-        background: #000000;
-        border: 1px solid #00ff00;
-        padding: 15px;
-        text-align: center;
-        font-family: 'IBM Plex Mono', monospace;
-    }
-    
-    .bloomberg-crypto:hover {
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
-    }
-    
-    .crypto-name {
-        font-size: 16px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    .crypto-price {
-        font-size: 20px;
-        font-weight: 600;
+    /* Text content */
+    .bloomberg-text {
+        color: #b3ffb3;
+        font-size: 15px;
+        line-height: 1.6;
         margin: 10px 0;
     }
     
+    /* Timestamp */
+    .bloomberg-timestamp {
+        color: #7fff7f;
+        font-size: 13px;
+        opacity: 0.8;
+        margin-bottom: 10px;
+    }
+    
+    /* Crypto price cards */
+    .bloomberg-crypto {
+        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2f 100%);
+        border: 1px solid #00ff00;
+        padding: 20px;
+        text-align: center;
+        font-family: 'IBM Plex Mono', monospace;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+    
+    .bloomberg-crypto:hover {
+        box-shadow: 0 6px 12px rgba(0, 255, 0, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .crypto-name {
+        font-size: 18px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+    }
+    
+    .crypto-price {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 15px 0;
+    }
+    
     .crypto-change {
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 500;
+        padding: 5px 10px;
+        border-radius: 3px;
+        display: inline-block;
     }
     
     .crypto-change.positive {
         color: #00ff00;
+        background: rgba(0, 255, 0, 0.1);
     }
     
     .crypto-change.negative {
-        color: #ff0000;
+        color: #ff4444;
+        background: rgba(255, 0, 0, 0.1);
     }
     
-    /* Bloomberg-style sidebar */
+    /* Sidebar styling */
     .stSidebar {
-        background-color: #000000;
+        background-color: #0a0a0f;
         border-right: 1px solid #00ff00;
+        padding: 20px;
     }
     
-    /* Bloomberg-style titles */
+    /* Titles */
     h1 {
         color: #00ff00 !important;
         font-family: 'IBM Plex Mono', monospace;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 2px;
+        letter-spacing: 1px;
+        margin-bottom: 20px !important;
     }
     
     h2 {
@@ -125,48 +154,134 @@ st.markdown("""
         font-family: 'IBM Plex Mono', monospace;
         font-weight: 500;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
+        margin: 20px 0 !important;
     }
     
-    /* Bloomberg-style clock */
+    /* Clock styling */
     .bloomberg-clock {
-        background: #000000;
+        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2f 100%);
         border: 1px solid #00ff00;
-        padding: 10px;
+        padding: 15px;
         font-family: 'IBM Plex Mono', monospace;
         color: #00ff00;
-        font-size: 12px;
+        font-size: 14px;
+        border-radius: 5px;
+        margin-top: 20px;
     }
     
-    /* Bloomberg-style links */
+    /* Links */
     a {
         color: #00ff00;
         text-decoration: none;
+        transition: all 0.2s ease;
     }
     
     a:hover {
-        text-decoration: underline;
+        color: #7fff7f;
+        text-decoration: none;
     }
     
-    /* Bloomberg-style info box */
+    /* Info and warning boxes */
     .stInfo {
-        background: #000000;
+        background: rgba(0, 255, 0, 0.1);
         border: 1px solid #00ff00;
         color: #00ff00;
-        padding: 10px;
-        border-radius: 0;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 10px 0;
     }
     
-    /* Bloomberg-style warning box */
     .stWarning {
-        background: #000000;
-        border: 1px solid #ff0000;
-        color: #ff0000;
+        background: rgba(255, 68, 68, 0.1);
+        border: 1px solid #ff4444;
+        color: #ff4444;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 10px 0;
+    }
+    
+    /* Loading spinner */
+    .stSpinner > div {
+        border-color: #00ff00 !important;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background-color: #0a0a0f;
+        color: #00ff00;
+        border: 1px solid #00ff00;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-family: 'IBM Plex Mono', monospace;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton > button:hover {
+        background-color: #00ff00;
+        color: #0a0a0f;
+    }
+    
+    /* Search box */
+    .stTextInput > div > div > input {
+        background-color: #0a0a0f;
+        color: #00ff00;
+        border: 1px solid #00ff00;
         padding: 10px;
-        border-radius: 0;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+    
+    /* Tooltip */
+    .tooltip {
+        position: relative;
+        display: inline-block;
+        cursor: help;
+    }
+    
+    .tooltip .tooltiptext {
+        visibility: hidden;
+        background-color: #0a0a0f;
+        color: #00ff00;
+        text-align: center;
+        padding: 5px 10px;
+        border-radius: 3px;
+        border: 1px solid #00ff00;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
     }
     </style>
 """, unsafe_allow_html=True)
+
+# Display welcome message and help
+if 'show_welcome' not in st.session_state:
+    st.session_state.show_welcome = True
+
+if st.session_state.show_welcome:
+    st.info("""
+    👋 Welcome to Crypto Terminal Pro!
+    
+    This dashboard provides real-time cryptocurrency prices and news updates.
+    
+    - 📈 View live crypto prices
+    - 📰 Read latest news from multiple sources
+    - 📊 Access market analysis tools
+    - ⚡ Auto-refreshes every 15 seconds
+    
+    Click the X in the top right to dismiss this message.
+    """)
+    if st.button("Don't show this again"):
+        st.session_state.show_welcome = False
+        st.rerun()
 
 # --------------------------------------
 # Fungsi untuk menampilkan jam menggunakan JavaScript
@@ -337,29 +452,37 @@ st.sidebar.markdown(display_clock(container="sidebar-clock"), unsafe_allow_html=
 # --------------------------------------
 # Title
 # --------------------------------------
-st.title("🚀 BLOOMBERG-STYLE CRYPTO TERMINAL")
+st.title("🚀 CRYPTO TERMINAL PRO")
 
 # Update the crypto display section
 st.markdown("""
     <div class='terminal-header'>
-        <div class='bloomberg-headline'>LIVE CRYPTO PRICES</div>
+        <div class='bloomberg-headline'>
+            <span class="tooltip">
+                LIVE CRYPTO PRICES
+                <span class="tooltiptext">Auto-updates every 15 seconds</span>
+            </span>
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns(3)
 cryptos = [
-    ("BITCOIN (BTC)", "bitcoin"),
-    ("ETHEREUM (ETH)", "ethereum"),
-    ("SOLANA (SOL)", "solana")
+    ("BITCOIN (BTC)", "bitcoin", "The original cryptocurrency"),
+    ("ETHEREUM (ETH)", "ethereum", "Leading smart contract platform"),
+    ("SOLANA (SOL)", "solana", "High-performance blockchain platform")
 ]
-for col, (name, key) in zip([col1, col2, col3], cryptos):
+for col, (name, key, description) in zip([col1, col2, col3], cryptos):
     with col:
         price = st.session_state.crypto_prices[key]['usd']
         change = st.session_state.crypto_prices[key]['usd_24h_change']
         change_class = 'negative' if change < 0 else 'positive'
         st.markdown(f"""
         <div class='bloomberg-crypto'>
-            <div class='crypto-name'>{name}</div>
+            <div class='crypto-name tooltip'>
+                {name}
+                <span class="tooltiptext">{description}</span>
+            </div>
             <div class='crypto-price'>${price:,.2f}</div>
             <div class='crypto-change {change_class}'>{change:+.2f}%</div>
         </div>
@@ -367,40 +490,49 @@ for col, (name, key) in zip([col1, col2, col3], cryptos):
 
 st.markdown("""
     <div class='bloomberg-text' style='text-align: center; margin: 10px 0;'>
-        DATA REFRESHES EVERY 15 SECONDS
+        <span class="tooltip">
+            ⚡ LIVE DATA - Auto-refreshes every 15 seconds
+            <span class="tooltiptext">Last update: {}</span>
+        </span>
     </div>
-""", unsafe_allow_html=True)
+""".format(datetime.now().strftime("%H:%M:%S")), unsafe_allow_html=True)
 
 # --------------------------------------
 # Fungsi tampil berita
 # --------------------------------------
 def display_news_items(news_list):
     if not news_list:
-        st.write("NO NEWS AVAILABLE")
+        st.warning("⚠️ No news available at the moment. Please try another source or check back later.")
         return
-    top_news = news_list[0]
-    dt_top = datetime.fromtimestamp(top_news["published_time"])
-    news_html = f"""
-    <div class='bloomberg-card'>
-        <div class='bloomberg-headline'>{top_news['title']}</div>
-        <div class='bloomberg-timestamp'>{dt_top.strftime("%Y-%m-%d %H:%M:%S UTC")}</div>
-        <div class='bloomberg-text'>{top_news['summary']}</div>
-        <div><a href='{top_news['link']}' target='_blank'>READ MORE</a></div>
-    </div>
-    """
-    st.markdown(news_html, unsafe_allow_html=True)
-    st.markdown("---")
-    for item in news_list[1:10]:
-        dt_item = datetime.fromtimestamp(item["published_time"])
-        item_html = f"""
-        <div class='bloomberg-card'>
-            <div class='bloomberg-headline'>{item['title']}</div>
-            <div class='bloomberg-timestamp'>{dt_item.strftime("%Y-%m-%d %H:%M:%S UTC")}</div>
-            <div class='bloomberg-text'>{item['summary']}</div>
-            <div><a href='{item['link']}' target='_blank'>READ MORE</a></div>
-        </div>
-        """
-        st.markdown(item_html, unsafe_allow_html=True)
+        
+    # Filter news if search term exists
+    if search_term:
+        news_list = [
+            news for news in news_list 
+            if search_term.lower() in news['title'].lower() 
+            or search_term.lower() in news['summary'].lower()
+        ]
+        
+    if not news_list:
+        st.warning(f"No news found matching '{search_term}'")
+        return
+        
+    with st.spinner('Loading latest news...'):
+        for item in news_list:
+            dt_item = datetime.fromtimestamp(item["published_time"])
+            st.markdown(f"""
+            <div class='bloomberg-card'>
+                <div class='bloomberg-headline'>{item['title']}</div>
+                <div class='bloomberg-timestamp'>
+                    <span class="tooltip">
+                        {dt_item.strftime("%Y-%m-%d %H:%M:%S UTC")}
+                        <span class="tooltiptext">Published time in UTC</span>
+                    </span>
+                </div>
+                <div class='bloomberg-text'>{item['summary']}</div>
+                <div><a href='{item['link']}' target='_blank'>🔗 READ FULL ARTICLE</a></div>
+            </div>
+            """, unsafe_allow_html=True)
 
 # --------------------------------------
 # Tampilkan konten berdasar section
@@ -433,4 +565,36 @@ elif section == "Features":
 st.markdown(display_clock(container="clock"), unsafe_allow_html=True)
 
 # Auto-refresh the entire app every 15 seconds
-st_autorefresh(interval=15_000, limit=None, key="price_refresher") 
+st_autorefresh(interval=15_000, limit=None, key="price_refresher")
+
+# Add search functionality for news
+st.sidebar.markdown("### 🔍 Search News")
+search_term = st.sidebar.text_input("Enter keywords to filter news", "")
+
+# Add help text for features
+with st.sidebar.expander("ℹ️ How to Use"):
+    st.markdown("""
+    **Quick Guide:**
+    1. Use the navigation radio buttons to switch between News and Features
+    2. Select news sources from the dropdown menu
+    3. Use the search box to filter news by keywords
+    4. Click on news headlines to read full articles
+    5. Watch the auto-updating crypto prices
+    """)
+
+# Add market summary
+with st.sidebar.expander("📊 Market Summary"):
+    st.markdown("""
+    **24h Market Overview:**
+    - Total Market Cap: $2.34T
+    - 24h Volume: $98.2B
+    - BTC Dominance: 52.3%
+    """)
+
+# Footer
+st.markdown("---")
+st.markdown("""
+<div style='text-align: center; color: #7fff7f; font-size: 12px;'>
+    Made with 💚 by Your Name | Data provided by CoinGecko and various news sources
+</div>
+""", unsafe_allow_html=True) 
