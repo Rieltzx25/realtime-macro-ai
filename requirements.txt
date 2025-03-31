@@ -5,3 +5,4 @@ pandas
 beautifulsoup4
 textblob
 streamlit-autorefresh
+plotly
