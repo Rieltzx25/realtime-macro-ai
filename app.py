@@ -21,86 +21,105 @@ st.set_page_config(
 # Add custom CSS for improved styling
 st.markdown("""
     <style>
+    /* Color Palette */
+    :root {
+        --bg-dark: #0f172a;
+        --bg-card: #1e293b;
+        --accent-primary: #22c55e;
+        --accent-secondary: #10b981;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --up-color: #22c55e;
+        --down-color: #ef4444;
+        --hover-color: #334155;
+        --border-color: #475569;
+    }
+    
     /* Import fonts */
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
     
     /* Main container styling */
     .main {
-        background-color: #0a0a0f;
-        color: #00ff00;
+        background-color: var(--bg-dark);
+        color: var(--text-primary);
         font-family: 'Inter', sans-serif;
     }
     
     /* Terminal header */
     .terminal-header {
-        background: linear-gradient(90deg, #0a0a0f 0%, #1a1a2f 100%);
-        border-bottom: 1px solid #00ff00;
+        background: linear-gradient(90deg, var(--bg-dark) 0%, var(--bg-card) 100%);
+        border-bottom: 1px solid var(--border-color);
         padding: 15px;
         margin-bottom: 20px;
-        border-radius: 5px;
+        border-radius: 8px;
     }
     
     /* Card styling */
     .bloomberg-card {
-        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2f 100%);
-        border: 1px solid #00ff00;
+        background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-card) 100%);
+        border: 1px solid var(--border-color);
         padding: 20px;
         margin-bottom: 15px;
         font-family: 'IBM Plex Mono', monospace;
-        box-shadow: 0 4px 6px rgba(0, 255, 0, 0.1);
-        border-radius: 5px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
         transition: all 0.3s ease;
     }
     
     .bloomberg-card:hover {
-        box-shadow: 0 6px 12px rgba(0, 255, 0, 0.2);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         transform: translateY(-2px);
+        border-color: var(--accent-primary);
     }
     
-    /* Headlines */
-    .bloomberg-headline {
-        color: #00ff00;
-        font-size: 18px;
-        font-weight: 600;
-        margin-bottom: 8px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        line-height: 1.4;
-    }
-    
-    /* Text content */
-    .bloomberg-text {
-        color: #b3ffb3;
-        font-size: 15px;
-        line-height: 1.6;
+    /* Clock styling */
+    .clock-container {
+        background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-card) 100%);
+        border: 1px solid var(--border-color);
+        padding: 15px;
+        border-radius: 8px;
+        font-family: 'IBM Plex Mono', monospace;
         margin: 10px 0;
+        color: var(--text-primary);
     }
     
-    /* Timestamp */
-    .bloomberg-timestamp {
-        color: #7fff7f;
-        font-size: 13px;
-        opacity: 0.8;
-        margin-bottom: 10px;
+    .clock-text {
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text-secondary);
+    }
+    
+    .clock-date {
+        color: var(--accent-primary);
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .clock-time {
+        color: var(--accent-secondary);
+        font-size: 16px;
+        font-weight: 600;
     }
     
     /* Crypto price cards */
     .bloomberg-crypto {
-        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2f 100%);
-        border: 1px solid #00ff00;
+        background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-card) 100%);
+        border: 1px solid var(--border-color);
         padding: 20px;
         text-align: center;
         font-family: 'IBM Plex Mono', monospace;
-        border-radius: 5px;
+        border-radius: 8px;
         transition: all 0.3s ease;
     }
     
     .bloomberg-crypto:hover {
-        box-shadow: 0 6px 12px rgba(0, 255, 0, 0.2);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         transform: translateY(-2px);
+        border-color: var(--accent-primary);
     }
     
     .crypto-name {
+        color: var(--text-primary);
         font-size: 18px;
         font-weight: 600;
         text-transform: uppercase;
@@ -109,6 +128,7 @@ st.markdown("""
     }
     
     .crypto-price {
+        color: var(--accent-primary);
         font-size: 24px;
         font-weight: 600;
         margin: 15px 0;
@@ -118,18 +138,18 @@ st.markdown("""
         font-size: 16px;
         font-weight: 500;
         padding: 5px 10px;
-        border-radius: 3px;
+        border-radius: 5px;
         display: inline-block;
     }
     
     .crypto-change.positive {
-        color: #00ff00;
-        background: rgba(0, 255, 0, 0.1);
+        color: var(--up-color);
+        background: rgba(34, 197, 94, 0.1);
     }
     
     .crypto-change.negative {
-        color: #ff4444;
-        background: rgba(255, 0, 0, 0.1);
+        color: var(--down-color);
+        background: rgba(239, 68, 68, 0.1);
     }
     
     /* Sidebar styling */
@@ -156,18 +176,6 @@ st.markdown("""
         text-transform: uppercase;
         letter-spacing: 0.5px;
         margin: 20px 0 !important;
-    }
-    
-    /* Clock styling */
-    .bloomberg-clock {
-        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2f 100%);
-        border: 1px solid #00ff00;
-        padding: 15px;
-        font-family: 'IBM Plex Mono', monospace;
-        color: #00ff00;
-        font-size: 14px;
-        border-radius: 5px;
-        margin-top: 20px;
     }
     
     /* Links */
@@ -288,10 +296,10 @@ if st.session_state.show_welcome:
 # --------------------------------------
 def display_clock(container="clock"):
     clock_html = f"""
-    <div class='{container}' id='{container}'>
-        <div class='clock-text' id='date-{container}'></div>
-        <div class='clock-text' id='utc-{container}'></div>
-        <div class='clock-text' id='wib-{container}'></div>
+    <div class='clock-container' id='{container}'>
+        <div class='clock-text clock-date' id='date-{container}'></div>
+        <div class='clock-text clock-time' id='utc-{container}'></div>
+        <div class='clock-text clock-time' id='wib-{container}'></div>
     </div>
     <script>
     function updateClock_{container}() {{
@@ -299,11 +307,16 @@ def display_clock(container="clock"):
         // UTC time
         const utc = now.toUTCString().split(' ')[4] + ' UTC';
         // WIB time (UTC+7)
-        const wibOffset = 7 * 60 * 60 * 1000; // 7 jam dalam milidetik
+        const wibOffset = 7 * 60 * 60 * 1000;
         const wib = new Date(now.getTime() + wibOffset);
         const wibStr = wib.toISOString().substr(11, 8) + ' WIB';
         // Tanggal
-        const dateStr = now.toUTCString().split(' ').slice(0, 4).join(' ');
+        const dateStr = now.toLocaleDateString('en-US', {{ 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        }});
         
         document.getElementById('date-{container}').innerText = dateStr;
         document.getElementById('utc-{container}').innerText = utc;
@@ -455,47 +468,7 @@ st.sidebar.markdown(display_clock(container="sidebar-clock"), unsafe_allow_html=
 st.title("🚀 CRYPTO TERMINAL PRO")
 
 # Update the crypto display section
-st.markdown("""
-    <div class='terminal-header'>
-        <div class='bloomberg-headline'>
-            <span class="tooltip">
-                LIVE CRYPTO PRICES
-                <span class="tooltiptext">Auto-updates every 15 seconds</span>
-            </span>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
-
-col1, col2, col3 = st.columns(3)
-cryptos = [
-    ("BITCOIN (BTC)", "bitcoin", "The original cryptocurrency"),
-    ("ETHEREUM (ETH)", "ethereum", "Leading smart contract platform"),
-    ("SOLANA (SOL)", "solana", "High-performance blockchain platform")
-]
-for col, (name, key, description) in zip([col1, col2, col3], cryptos):
-    with col:
-        price = st.session_state.crypto_prices[key]['usd']
-        change = st.session_state.crypto_prices[key]['usd_24h_change']
-        change_class = 'negative' if change < 0 else 'positive'
-        st.markdown(f"""
-        <div class='bloomberg-crypto'>
-            <div class='crypto-name tooltip'>
-                {name}
-                <span class="tooltiptext">{description}</span>
-            </div>
-            <div class='crypto-price'>${price:,.2f}</div>
-            <div class='crypto-change {change_class}'>{change:+.2f}%</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-st.markdown("""
-    <div class='bloomberg-text' style='text-align: center; margin: 10px 0;'>
-        <span class="tooltip">
-            ⚡ LIVE DATA - Auto-refreshes every 15 seconds
-            <span class="tooltiptext">Last update: {}</span>
-        </span>
-    </div>
-""".format(datetime.now().strftime("%H:%M:%S")), unsafe_allow_html=True)
+display_crypto_prices()
 
 # --------------------------------------
 # Fungsi tampil berita
