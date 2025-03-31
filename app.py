@@ -377,6 +377,51 @@ def get_crypto_prices():
         print("CoinGecko API error:", e)
     return prices
 
+# Fungsi untuk menampilkan crypto prices
+def display_crypto_prices():
+    st.markdown("""
+        <div class='terminal-header'>
+            <div class='bloomberg-headline'>
+                <span class="tooltip">
+                    LIVE CRYPTO PRICES
+                    <span class="tooltiptext">Auto-updates every 15 seconds</span>
+                </span>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns(3)
+    cryptos = [
+        ("BITCOIN (BTC)", "bitcoin", "The original cryptocurrency"),
+        ("ETHEREUM (ETH)", "ethereum", "Leading smart contract platform"),
+        ("SOLANA (SOL)", "solana", "High-performance blockchain platform")
+    ]
+    
+    for col, (name, key, description) in zip([col1, col2, col3], cryptos):
+        with col:
+            price = st.session_state.crypto_prices[key]['usd']
+            change = st.session_state.crypto_prices[key]['usd_24h_change']
+            change_class = 'negative' if change < 0 else 'positive'
+            st.markdown(f"""
+            <div class='bloomberg-crypto'>
+                <div class='crypto-name tooltip'>
+                    {name}
+                    <span class="tooltiptext">{description}</span>
+                </div>
+                <div class='crypto-price'>${price:,.2f}</div>
+                <div class='crypto-change {change_class}'>{change:+.2f}%</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("""
+        <div style='text-align: center; margin: 10px 0; color: var(--text-secondary);'>
+            <span class="tooltip">
+                ⚡ LIVE DATA - Auto-refreshes every 15 seconds
+                <span class="tooltiptext">Last update: {}</span>
+            </span>
+        </div>
+    """.format(datetime.now().strftime("%H:%M:%S")), unsafe_allow_html=True)
+
 # Initialize session state for crypto prices and last refresh time
 if 'crypto_prices' not in st.session_state:
     st.session_state.crypto_prices = get_crypto_prices()
