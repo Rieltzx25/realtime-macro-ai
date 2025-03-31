@@ -10,9 +10,9 @@ from textblob import TextBlob
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
-#############################
-#   1) CSS Langsung di file #
-#############################
+#########################################
+# 1) CSS Langsung (untuk tampilan gelap)
+#########################################
 st.markdown("""
 <style>
 .main {
@@ -24,7 +24,7 @@ st.markdown("""
     padding: 15px; border-radius: 15px; margin-bottom: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     border: 1px solid transparent;
-    background-image: linear-gradient(#1a1a1a, #1a1a1a), 
+    background-image: linear-gradient(#1a1a1a, #1a1a1a),
                       linear-gradient(45deg, #FF4500, #FFD700);
     background-origin: border-box; background-clip: padding-box, border-box;
     transition: box-shadow 0.2s ease, transform 0.2s ease;
@@ -43,13 +43,14 @@ st.markdown("""
 .news-timestamp {
     color: #888; font-size: 12px;
 }
+
 /* Kartu Crypto */
 .crypto-card {
     background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
     padding: 15px; border-radius: 20px; text-align: center;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     border: 1px solid transparent;
-    background-image: linear-gradient(#1a1a1a, #1a1a1a), 
+    background-image: linear-gradient(#1a1a1a, #1a1a1a),
                       linear-gradient(45deg, #FFD700, #00FF00);
     background-origin: border-box; background-clip: padding-box, border-box;
     transition: transform 0.2s ease-in-out;
@@ -82,9 +83,9 @@ h2 {
 </style>
 """, unsafe_allow_html=True)
 
-#############################
-#   2) Data & Config RSS    #
-#############################
+###################################
+# 2) RSS FEEDS & CONFIG (UTAMA)
+###################################
 RSS_FEEDS = {
     "NEWEST": [
         "https://www.cnbc.com/id/20910258/device/rss/rss.html",
@@ -135,38 +136,33 @@ NEWS_SOURCES = {k: v for k, v in RSS_FEEDS.items() if v is not None}
 FEATURES = ["Fear and Greed Index", "Bitcoin Rainbow Chart"]
 
 #############################
-#   3) FUNGSI- FUNGSI       #
+# 3) FUNCTION UTILITAS
 #############################
 def fetch_news(url, max_entries=5):
     try:
         resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
         resp.raise_for_status()
         feed = feedparser.parse(resp.text)
-        news_data = []
+        data = []
         for entry in feed.entries[:max_entries]:
-            pub_time = (
-                time.mktime(entry.published_parsed) 
-                if hasattr(entry, "published_parsed") else 0
-            )
+            pub_t = time.mktime(entry.published_parsed) if hasattr(entry, "published_parsed") else 0
             summary = entry.summary[:300]+"..." if getattr(entry, 'summary', None) else "No summary."
-            news_data.append({
+            data.append({
                 "title": entry.title,
                 "link": entry.link,
                 "summary": summary,
-                "published_time": pub_time
+                "published_time": pub_t
             })
-        return news_data
+        return data
     except:
         return []
 
 def get_crypto_prices():
     coins = {"bitcoin": {}, "ethereum": {}, "solana": {}}
-    url = (
-        "https://api.coingecko.com/api/v3/simple/price"
-        "?ids=bitcoin,ethereum,solana"
-        "&vs_currencies=usd"
-        "&include_24hr_change=true"
-    )
+    url = ("https://api.coingecko.com/api/v3/simple/price"
+           "?ids=bitcoin,ethereum,solana"
+           "&vs_currencies=usd"
+           "&include_24hr_change=true")
     try:
         data = requests.get(url, timeout=5).json()
         for c in coins:
@@ -182,14 +178,14 @@ def get_crypto_prices():
 def get_bitcoin_history(days=30):
     url = f"https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days={days}"
     r = requests.get(url).json()
-    dates = [datetime.utcfromtimestamp(p[0]/1000).strftime('%Y-%m-%d') for p in r['prices']]
-    prices = [p[1] for p in r['prices']]
+    dates = [datetime.utcfromtimestamp(pt[0]/1000).strftime('%Y-%m-%d') for pt in r['prices']]
+    prices = [pt[1] for pt in r['prices']]
     return dates, prices
 
 from textblob import TextBlob
-def analyze_sentiment(text):
+def analyze_sentiment(txt):
     try:
-        blob = TextBlob(text)
+        blob = TextBlob(txt)
         if blob.sentiment.polarity > 0:
             return "Positif"
         elif blob.sentiment.polarity < 0:
@@ -205,38 +201,46 @@ def display_news_items(news_list):
         return
     for item in news_list:
         dt_item = datetime.fromtimestamp(item["published_time"])
-        sent = analyze_sentiment(item["summary"])
+        senti = analyze_sentiment(item["summary"])
         st.markdown(f"""
-            <div class='news-card'>
-              <p class='news-headline'>{item['title']}</p>
-              <p class='news-timestamp'>
-                {dt_item.strftime('%a, %d %b %Y %H:%M:%S UTC')}
-                | <strong>SENTIMEN: {sent}</strong>
-              </p>
-              <p class='news-summary'>{item['summary']}</p>
-              <p><a href='{item['link']}' target='_blank'>🔗 Baca Selengkapnya</a></p>
-            </div>
+        <div class='news-card'>
+          <p class='news-headline'>{item['title']}</p>
+          <p class='news-timestamp'>
+            {dt_item.strftime('%a, %d %b %Y %H:%M:%S UTC')} 
+            | <strong>SENTIMEN: {senti}</strong>
+          </p>
+          <p class='news-summary'>{item['summary']}</p>
+          <p><a href='{item['link']}' target='_blank'>🔗 Baca Selengkapnya</a></p>
+        </div>
         """, unsafe_allow_html=True)
 
-def show_current_times():
-    """Tampilkan jam UTC & WIB di satu baris."""
+def show_utc_wib_time():
+    """Mengembalikan jam UTC & WIB dalam string."""
     now_utc = datetime.utcnow()
-    utc_time_str = now_utc.strftime("%H:%M:%S UTC")
-    wib_hour = (now_utc.hour + 7) % 24
-    wib_str = f"{wib_hour:02}:{now_utc.minute:02}:{now_utc.second:02} WIB"
-    st.write(f"**UTC**: {utc_time_str} | **WIB**: {wib_str}")
+    utc_str = now_utc.strftime("%H:%M:%S")
+    wib = (now_utc.hour + 7) % 24
+    wib_str = f"{wib:02}:{now_utc.minute:02}:{now_utc.second:02}"
+    return f"UTC: {utc_str} | WIB: {wib_str}"
 
-#############################
-#   4) BAGIAN UTAMA: LAYOUT #
-#############################
+#########################################
+# 4) SIDEBAR: Pilih News Feed / Features
+#########################################
+logo_path = "cat_logo.webp"
+if os.path.exists(logo_path):
+    st.sidebar.image(logo_path, width=150)
 
-# --- Title & Crypto Cards ---
+st.sidebar.header("Navigation")
+section = st.sidebar.radio("Menu:", ["News Feed", "Features"])
+
+#################################
+# 5) BAGIAN HEAD & CRYPTO CARDS
+#################################
 st.title("🚀 Realtime Macro & Crypto Dashboard")
 
-# Letakkan info data refresh di atas card
+# Tampilkan info refresh
 st.markdown("**Data refreshes automatically every 15 seconds.**")
 
-# Inisialisasi prices & auto-refresh
+# Inisialisasi
 if 'crypto_prices' not in st.session_state:
     st.session_state.crypto_prices = get_crypto_prices()
 if 'last_price_refresh' not in st.session_state:
@@ -246,95 +250,94 @@ if time.time() - st.session_state.last_price_refresh >= 15:
     st.session_state.crypto_prices = get_crypto_prices()
     st.session_state.last_price_refresh = time.time()
 
-# Tampilkan Card 3 Crypto
 st.subheader("Live Crypto Prices")
 col1, col2, col3 = st.columns(3)
 cryptos = [("Bitcoin (BTC)", "bitcoin"),
            ("Ethereum (ETH)", "ethereum"),
            ("Solana (SOL)", "solana")]
-cols = [col1, col2, col3]
 
-for (name, key), col in zip(cryptos, cols):
-    with col:
-        info = st.session_state.crypto_prices.get(key, {})
-        price = info.get("usd", 0)
-        change = info.get("usd_24h_change", 0)
+for (name, key), c in zip(cryptos, [col1, col2, col3]):
+    with c:
+        d = st.session_state.crypto_prices.get(key, {})
+        price = d.get("usd", 0)
+        change = d.get("usd_24h_change", 0)
         change_class = "negative" if change < 0 else "positive"
         st.markdown(f"""
         <div class='crypto-card'>
             <h3 class='crypto-name {key}'>{name}</h3>
             <p class='crypto-price'>${price:,.2f}</p>
             <p class='crypto-change {change_class}'>{change:.2f}%</p>
-        </div>        
+        </div>
         """, unsafe_allow_html=True)
 
-# --- Bagian Berita & Tools ---
+# Pemisah
 st.write("---")
-# Buat row untuk input user: "Cari Berita", "Pilih Sumber Berita", dan jam
-colA, colB, colC = st.columns([2,2,2])
 
-with colA:
-    search_keyword = st.text_input("🔍 Cari Berita:")
+########################################
+# 6) MAIN CONTENT: News Feed / Features
+########################################
+if section == "News Feed":
+    # Row: (colA: jam) (colB: feed) (colC: cari)
+    colA, colB, colC = st.columns([1,2,2])
+    with colA:
+        st.markdown(f"**Sekarang**:\n{show_utc_wib_time()}")
 
-with colB:
-    feed_choice = st.selectbox("Pilih sumber berita", list(NEWS_SOURCES.keys()))
+    with colB:
+        feed_choice = st.selectbox("Pilih sumber berita:", list(NEWS_SOURCES.keys()))
 
-with colC:
-    st.write("**Jam Sekarang**:")
-    show_current_times()  # jam UTC & WIB
+    with colC:
+        search_keyword = st.text_input("Cari Berita:")
 
-# --- Tampilkan Berita ---
-st.subheader("📰 Berita Terbaru")
+    st.subheader("📰 Berita Terbaru")
 
-# Ambil data
-if feed_choice == "NEWEST":
-    all_feeds = RSS_FEEDS["NEWEST"]
-    all_news = []
-    for feed_url in all_feeds:
-        all_news.extend(fetch_news(feed_url, max_entries=3))
-else:
-    chosen_feed_url = NEWS_SOURCES[feed_choice]
-    all_news = fetch_news(chosen_feed_url, max_entries=10)
+    if feed_choice == "NEWEST":
+        feeds = RSS_FEEDS["NEWEST"]
+        all_news = []
+        for f_url in feeds:
+            all_news.extend(fetch_news(f_url, max_entries=3))
+    else:
+        f_url = NEWS_SOURCES[feed_choice]
+        all_news = fetch_news(f_url, max_entries=10)
 
-# Urutkan
-all_news.sort(key=lambda x: x["published_time"], reverse=True)
-# Filter
-if search_keyword:
-    all_news = [n for n in all_news if search_keyword.lower() in n["title"].lower()]
+    # Sort by published time
+    all_news.sort(key=lambda x: x["published_time"], reverse=True)
 
-display_news_items(all_news)
+    # Filter by keyword
+    if search_keyword:
+        all_news = [n for n in all_news if search_keyword.lower() in n["title"].lower()]
 
-# --- FEATURES SECTION ---
-st.write("---")
-st.subheader("Fitur Tambahan")
-feature_choice = st.selectbox("Pilih Fitur", FEATURES)
+    display_news_items(all_news)
 
-if feature_choice == "Fear and Greed Index":
-    st.markdown("### Fear and Greed Index")
-    st.warning("Iframe is blocked by the site. Click the link below to view.")
-    st.markdown("[Visit Fear and Greed Index](https://alternative.me/crypto/fear-and-greed-index/)")
+elif section == "Features":
+    st.subheader("Fitur Tambahan")
+    # Fitur: Fear & Greed / Rainbow
+    feature_choice = st.selectbox("Pilih Fitur:", FEATURES)
 
-elif feature_choice == "Bitcoin Rainbow Chart":
-    st.markdown("### Bitcoin Rainbow Chart")
-    st.warning("Iframe is blocked by the site. Click the link below to view.")
-    st.markdown("[Visit Bitcoin Rainbow Chart](https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/)")
+    if feature_choice == "Fear and Greed Index":
+        st.markdown("### Fear and Greed Index")
+        st.warning("Iframe is blocked by the site. Click the link below to view.")
+        st.markdown("[Visit Fear and Greed Index](https://alternative.me/crypto/fear-and-greed-index/)")
 
-# Tampilkan grafik BTC 30 hari
-st.markdown("### 📈 Bitcoin Price (30 Day Chart)")
-dates, prices = get_bitcoin_history(30)
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=dates, y=prices, name="BTC", line=dict(color='gold')))
-# Tema gelap ala trading
-fig.update_layout(
-    template="plotly_dark",
-    paper_bgcolor="#1e1e2f",
-    plot_bgcolor="#1e1e2f",
-    font_color="white",
-    title="Harga Bitcoin - 30 Hari",
-    xaxis_title="Tanggal",
-    yaxis_title="USD",
-)
-st.plotly_chart(fig, use_container_width=True)
+    elif feature_choice == "Bitcoin Rainbow Chart":
+        st.markdown("### Bitcoin Rainbow Chart")
+        st.warning("Iframe is blocked by the site. Click the link below to view.")
+        st.markdown("[Visit Bitcoin Rainbow Chart](https://www.blockchaincenter.net/en/bitcoin-rainbow-chart/)")
+
+    # Tambah chart BTC 30 hari
+    st.markdown("### 📈 Bitcoin Price (30 Day Chart)")
+    dts, prcs = get_bitcoin_history(30)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=dts, y=prcs, name="BTC", line=dict(color='gold')))
+    fig.update_layout(
+        title="Harga Bitcoin - 30 Hari",
+        xaxis_title="Tanggal",
+        yaxis_title="USD",
+        template="plotly_dark",
+        paper_bgcolor="#1e1e2f",
+        plot_bgcolor="#1e1e2f",
+        font_color="white",
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 # Auto-refresh
-st_autorefresh(interval=15000, key="auto-refresh-15s")
+st_autorefresh(interval=15000, key="refresh-15s")
