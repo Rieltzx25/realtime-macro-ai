@@ -5,16 +5,144 @@ import time
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 import os
-import plotly.graph_objects as go
-from textblob import TextBlob
 
 st.set_page_config(page_title="Realtime Macro & Crypto Dashboard 🚀", layout="wide")
 
-# Tambahkan custom CSS dari file jika ada
-css_path = "assets/css/style.css"
-if os.path.exists(css_path):
-    with open(css_path) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+# Add custom CSS for styling
+st.markdown("""
+    <style>
+    .main {
+        background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
+        position: relative;
+    }
+    .news-card {
+        background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+        padding: 15px;
+        border-radius: 15px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        border: 1px solid transparent;
+        background-image: linear-gradient(#1a1a1a, #1a1a1a), 
+                          linear-gradient(45deg, #FF4500, #FFD700);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .news-card:hover {
+        box-shadow: 0 6px 12px rgba(255, 255, 255, 0.15);
+        transform: translateY(-3px);
+    }
+    .news-headline {
+        color: #FFFFFF;
+        font-size: 20px;
+        font-weight: bold;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    .news-summary {
+        color: #CCCCCC;
+        font-size: 14px;
+    }
+    .news-timestamp {
+        color: #888;
+        font-size: 12px;
+    }
+    .crypto-card {
+        background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+        padding: 15px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        border: 1px solid transparent;
+        background-image: linear-gradient(#1a1a1a, #1a1a1a), 
+                          linear-gradient(45deg, #FFD700, #00FF00);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+        transition: transform 0.2s ease-in-out;
+    }
+    .crypto-card:hover {
+        transform: scale(1.02);
+    }
+    .crypto-name {
+        font-size: 20px;
+        font-weight: bold;
+    }
+    .crypto-name.bitcoin {
+        color: #FFD700;
+    }
+    .crypto-name.ethereum, .crypto-name.solana {
+        color: #FFFFFF;
+    }
+    .crypto-price {
+        font-size: 18px;
+        font-weight: bold;
+        color: #FFFFFF;
+    }
+    .crypto-change {
+        font-size: 16px;
+    }
+    .crypto-change.negative {
+        color: #FF0000;
+    }
+    .crypto-change.positive {
+        color: #00FF00;
+    }
+    .stSidebar {
+        background: linear-gradient(180deg, #2a2a4a 0%, #1e1e2f 100%);
+        border-right: 1px solid #FFD700;
+    }
+    h1 {
+        color: #FFD700 !important;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    h2 {
+        color: #00FF00 !important;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    /* Styling untuk jam di ujung kiri bawah */
+    .clock-container {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+        padding: 10px 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        border: 1px solid transparent;
+        background-image: linear-gradient(#1a1a1a, #1a1a1a), 
+                          linear-gradient(45deg, #00FF00, #FFD700);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+        color: #FFFFFF;
+        font-size: 14px;
+        z-index: 10000;
+    }
+    /* Styling untuk jam di sidebar */
+    .sidebar-clock-container {
+        background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+        padding: 10px 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        border: 1px solid transparent;
+        background-image: linear-gradient(#1a1a1a, #1a1a1a), 
+                          linear-gradient(45deg, #00FF00, #FFD700);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+        color: #FFFFFF;
+        font-size: 14px;
+        margin-top: 20px;
+    }
+    .clock-text {
+        margin: 2px 0;
+        color: #CCCCCC;
+    }
+    /* Media query untuk desktop */
+    @media (min-width: 768px) {
+        .clock-container {
+            left: 250px; /* Geser ke kanan agar tidak tertutup sidebar */
+        }
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 ########################################################
 # BAGIAN PENTING: TETAPKAN RSS_FEEDS, NEWS_SOURCES, dll #
