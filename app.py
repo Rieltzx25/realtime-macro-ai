@@ -944,7 +944,6 @@ def display_trending_coins():
     </div>
     """, unsafe_allow_html=True)
 
-# New function to display news sentiment summary
 def display_sentiment_summary(news_list):
     """Displays a summary of news sentiment"""
     if not news_list:
@@ -977,50 +976,39 @@ def display_sentiment_summary(news_list):
     elif neg_percent > pos_percent + 20:
         overall = "Slightly Bearish"
     
-    # Display sentiment summary
+    # Create a feature card for sentiment analysis
     st.markdown(f"""
     <div class="feature-card">
         <div class="feature-header">
             <span class="feature-icon">🧠</span>
             <h2 class="feature-title">News Sentiment Analysis</h2>
         </div>
-        <div class="feature-content">
-            <p style="font-size: 18px; margin-bottom: 15px;">Overall Market Sentiment: <strong style="color: {'#2ecc71' if 'Bullish' in overall else '#e74c3c' if 'Bearish' in overall else '#AAAAAA'};">{overall}</strong></p>
-            
-            <div style="background: rgba(52, 152, 219, 0.1); border-radius: 10px; padding: 15px; margin-bottom: 15px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span style="color: #2ecc71;">Positive</span>
-                    <span style="color: #2ecc71;">{pos_percent:.1f}%</span>
-                </div>
-                <div style="width: 100%; background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px;">
-                    <div style="width: {pos_percent}%; background: #2ecc71; height: 10px; border-radius: 5px;"></div>
-                </div>
-            </div>
-            
-            <div style="background: rgba(52, 152, 219, 0.1); border-radius: 10px; padding: 15px; margin-bottom: 15px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span style="color: #AAAAAA;">Neutral</span>
-                    <span style="color: #AAAAAA;">{neu_percent:.1f}%</span>
-                </div>
-                <div style="width: 100%; background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px;">
-                    <div style="width: {neu_percent}%; background: #AAAAAA; height: 10px; border-radius: 5px;"></div>
-                </div>
-            </div>
-            
-            <div style="background: rgba(52, 152, 219, 0.1); border-radius: 10px; padding: 15px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span style="color: #e74c3c;">Negative</span>
-                    <span style="color: #e74c3c;">{neg_percent:.1f}%</span>
-                </div>
-                <div style="width: 100%; background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px;">
-                    <div style="width: {neg_percent}%; background: #e74c3c; height: 10px; border-radius: 5px;"></div>
-                </div>
-            </div>
-            
-            <p style="font-size: 14px; color: #AAAAAA; margin-top: 15px;">Based on analysis of {total} news articles</p>
-        </div>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Display overall sentiment
+    sentiment_color = "#2ecc71" if "Bullish" in overall else "#e74c3c" if "Bearish" in overall else "#AAAAAA"
+    st.write(f"Overall Market Sentiment: **{overall}**")
+    
+    # Create columns for the progress bars
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.write("Positive")
+        st.progress(pos_percent/100)
+        st.write(f"{pos_percent:.1f}%")
+    
+    with col2:
+        st.write("Neutral")
+        st.progress(neu_percent/100)
+        st.write(f"{neu_percent:.1f}%")
+    
+    with col3:
+        st.write("Negative")
+        st.progress(neg_percent/100)
+        st.write(f"{neg_percent:.1f}%")
+    
+    st.write(f"Based on analysis of {total} news articles")
 
 # New function to display Fear and Greed Index
 def display_fear_greed_index():
