@@ -1065,6 +1065,60 @@ def display_fear_greed_index():
             </p>
         </div>
     </div>
+    """, unsafe_allow_html=True)def display_fear_greed_index():
+    """Displays the Fear and Greed Index with proper visualization"""
+    # Generate a random value between 0 and 100 for demo purposes
+    # In production, you would fetch this from an API
+    fear_greed_value = 65
+    
+    # Determine the sentiment text based on the value
+    if fear_greed_value <= 25:
+        sentiment = "Extreme Fear"
+        color = "#e74c3c"
+    elif fear_greed_value <= 45:
+        sentiment = "Fear"
+        color = "#f39c12"
+    elif fear_greed_value <= 55:
+        sentiment = "Neutral"
+        color = "#f1c40f"
+    elif fear_greed_value <= 75:
+        sentiment = "Greed"
+        color = "#2ecc71"
+    else:
+        sentiment = "Extreme Greed"
+        color = "#27ae60"
+    
+    # Calculate the position of the indicator (percentage of the gauge width)
+    position_percent = fear_greed_value
+    
+    st.markdown(f"""
+    <div class="feature-card">
+        <div class="feature-header">
+            <span class="feature-icon">📊</span>
+            <h2 class="feature-title">Crypto Fear & Greed Index</h2>
+        </div>
+        <div class="feature-content fear-greed-container">
+            <div class="fear-greed-text">Current Status: <span style="color: {color}">{sentiment}</span></div>
+            <div class="fear-greed-value">{fear_greed_value}</div>
+            
+            <div class="fear-greed-gauge">
+                <div class="fear-greed-indicator" style="left: {position_percent}%;"></div>
+            </div>
+            
+            <div class="fear-greed-labels">
+                <span style="color: #e74c3c">Extreme Fear</span>
+                <span style="color: #f39c12">Fear</span>
+                <span style="color: #f1c40f">Neutral</span>
+                <span style="color: #2ecc71">Greed</span>
+                <span style="color: #27ae60">Extreme Greed</span>
+            </div>
+            
+            <p style="margin-top: 20px; text-align: center;">
+                The Fear & Greed Index analyzes emotions and sentiments from different sources and condenses them into a simple number.
+                <br>A value of 0 means "Extreme Fear", while a value of 100 represents "Extreme Greed".
+            </p>
+        </div>
+    </div>
     """, unsafe_allow_html=True)
 
 # New function to display Bitcoin Rainbow Chart
