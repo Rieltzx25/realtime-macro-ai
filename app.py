@@ -1,7 +1,4 @@
-import fs from 'fs';
-
-// Create the enhanced code with properly escaped CSS
-const enhancedCode = `import streamlit as st
+import streamlit as st
 import feedparser
 import requests
 import time
@@ -25,7 +22,7 @@ st.markdown(
     <style>
     /* Global Background with animated gradient */
     .main {
-        background: linear-gradient(-45deg, \\#1e1e2f, \\#2a2a4a, \\#1a1a2a, \\#2d2d4d);
+        background: linear-gradient(-45deg, \#1e1e2f, \#2a2a4a, \#1a1a2a, \#2d2d4d);
         background-size: 400% 400%;
         animation: gradient 15s ease infinite;
         position: relative;
@@ -60,7 +57,7 @@ st.markdown(
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         border: 1px solid transparent;
         background-image: linear-gradient(rgba(26, 26, 26, 0.7), rgba(26, 26, 26, 0.7)),
-                          linear-gradient(45deg, \\#FF4500, \\#FFD700);
+                          linear-gradient(45deg, \#FF4500, \#FFD700);
         background-origin: border-box;
         background-clip: padding-box, border-box;
         transition: all 0.3s ease;
@@ -89,7 +86,7 @@ st.markdown(
     }
     
     .news-headline {
-        color: \\#FFFFFF;
+        color: \#FFFFFF;
         font-size: 22px;
         font-weight: bold;
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
@@ -99,13 +96,13 @@ st.markdown(
     }
     
     .news-summary {
-        color: \\#DDDDDD;
+        color: \#DDDDDD;
         font-size: 15px;
         line-height: 1.5;
     }
     
     .news-timestamp {
-        color: \\#AAA;
+        color: \#AAA;
         font-size: 12px;
         display: flex;
         align-items: center;
@@ -124,26 +121,26 @@ st.markdown(
     
     .sentiment-positive {
         background-color: rgba(0, 255, 0, 0.2);
-        color: \\#00FF00;
+        color: \#00FF00;
         border: 1px solid rgba(0, 255, 0, 0.3);
     }
     
     .sentiment-negative {
         background-color: rgba(255, 0, 0, 0.2);
-        color: \\#FF5555;
+        color: \#FF5555;
         border: 1px solid rgba(255, 0, 0, 0.3);
     }
     
     .sentiment-neutral {
         background-color: rgba(255, 255, 255, 0.1);
-        color: \\#BBBBBB;
+        color: \#BBBBBB;
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
     .read-more-link {
         display: inline-block;
         margin-top: 10px;
-        color: \\#FFD700;
+        color: \#FFD700;
         text-decoration: none;
         font-weight: bold;
         transition: all 0.2s ease;
@@ -151,7 +148,7 @@ st.markdown(
     }
     
     .read-more-link:hover {
-        border-bottom: 1px solid \\#FFD700;
+        border-bottom: 1px solid \#FFD700;
         padding-left: 5px;
     }
     
@@ -165,7 +162,7 @@ st.markdown(
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         border: 1px solid transparent;
         background-image: linear-gradient(rgba(26, 26, 26, 0.7), rgba(26, 26, 26, 0.7)),
-                          linear-gradient(45deg, \\#FFD700, \\#00FF00);
+                          linear-gradient(45deg, \#FFD700, \#00FF00);
         background-origin: border-box;
         background-clip: padding-box, border-box;
         transition: all 0.3s ease;
@@ -202,21 +199,21 @@ st.markdown(
     }
     
     .crypto-name.bitcoin {
-        color: \\#FFD700;
+        color: \#FFD700;
     }
     
     .crypto-name.ethereum {
-        color: \\#9EAEFF;
+        color: \#9EAEFF;
     }
     
     .crypto-name.solana {
-        color: \\#00FFA3;
+        color: \#00FFA3;
     }
     
     .crypto-price {
         font-size: 24px;
         font-weight: bold;
-        color: \\#FFFFFF;
+        color: \#FFFFFF;
         margin: 10px 0;
     }
     
@@ -229,17 +226,17 @@ st.markdown(
     
     .crypto-change.negative {
         background-color: rgba(255, 0, 0, 0.2);
-        color: \\#FF5555;
+        color: \#FF5555;
     }
     
     .crypto-change.positive {
         background-color: rgba(0, 255, 0, 0.2);
-        color: \\#00FF00;
+        color: \#00FF00;
     }
     
     /* Enhanced Sidebar */
     .stSidebar {
-        background: linear-gradient(180deg, \\#2a2a4a 0%, \\#1e1e2f 100%);
+        background: linear-gradient(180deg, \#2a2a4a 0%, \#1e1e2f 100%);
         border-right: 1px solid rgba(255, 215, 0, 0.3);
         box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
     }
@@ -266,7 +263,7 @@ st.markdown(
     }
     
     .sidebar-nav-item.active {
-        border-left: 3px solid \\#FFD700;
+        border-left: 3px solid \#FFD700;
     }
     
     /* Enhanced Sidebar Clock */
@@ -277,7 +274,7 @@ st.markdown(
         border-radius: 15px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         border: 1px solid rgba(255, 215, 0, 0.2);
-        color: \\#FFFFFF;
+        color: \#FFFFFF;
         font-size: 14px;
         margin-top: 30px;
         position: relative;
@@ -297,14 +294,14 @@ st.markdown(
     
     .clock-text {
         margin: 5px 0;
-        color: \\#DDDDDD;
+        color: \#DDDDDD;
         display: flex;
         align-items: center;
     }
     
     .clock-icon {
         margin-right: 10px;
-        color: \\#FFD700;
+        color: \#FFD700;
     }
     
     /* Dashboard Header */
@@ -325,7 +322,7 @@ st.markdown(
     .dashboard-title-icon {
         font-size: 32px;
         margin-right: 15px;
-        color: \\#FFD700;
+        color: \#FFD700;
     }
     
     .dashboard-refresh-info {
@@ -333,7 +330,7 @@ st.markdown(
         padding: 8px 15px;
         border-radius: 20px;
         font-size: 14px;
-        color: \\#AAFFAA;
+        color: \#AAFFAA;
         display: flex;
         align-items: center;
     }
@@ -371,7 +368,7 @@ st.markdown(
     .chart-title {
         font-size: 20px;
         font-weight: bold;
-        color: \\#FFD700;
+        color: \#FFD700;
     }
     
     .chart-period-selector {
@@ -384,14 +381,14 @@ st.markdown(
         border: none;
         padding: 5px 10px;
         border-radius: 5px;
-        color: \\#CCCCCC;
+        color: \#CCCCCC;
         cursor: pointer;
         transition: all 0.2s ease;
     }
     
     .chart-period-btn:hover, .chart-period-btn.active {
         background: rgba(255, 215, 0, 0.2);
-        color: \\#FFD700;
+        color: \#FFD700;
     }
     
     /* Search Box */
@@ -406,7 +403,7 @@ st.markdown(
         border-radius: 30px;
         border: 1px solid rgba(255, 215, 0, 0.3);
         background: rgba(26, 26, 26, 0.7);
-        color: \\#FFFFFF;
+        color: \#FFFFFF;
         font-size: 16px;
         transition: all 0.3s ease;
     }
@@ -422,7 +419,7 @@ st.markdown(
         left: 15px;
         top: 50%;
         transform: translateY(-50%);
-        color: \\#888888;
+        color: \#888888;
     }
     
     /* Feature Cards */
@@ -453,17 +450,17 @@ st.markdown(
     .feature-icon {
         font-size: 24px;
         margin-right: 10px;
-        color: \\#FFD700;
+        color: \#FFD700;
     }
     
     .feature-title {
         font-size: 20px;
         font-weight: bold;
-        color: \\#FFFFFF;
+        color: \#FFFFFF;
     }
     
     .feature-content {
-        color: \\#DDDDDD;
+        color: \#DDDDDD;
     }
     
     .feature-link {
@@ -471,7 +468,7 @@ st.markdown(
         margin-top: 15px;
         padding: 8px 20px;
         background: rgba(255, 215, 0, 0.2);
-        color: \\#FFD700;
+        color: \#FFD700;
         border-radius: 20px;
         text-decoration: none;
         transition: all 0.2s ease;
@@ -495,7 +492,7 @@ st.markdown(
         height: 40px;
         border: 4px solid rgba(255, 215, 0, 0.3);
         border-radius: 50%;
-        border-top: 4px solid \\#FFD700;
+        border-top: 4px solid \#FFD700;
         animation: spin 1s linear infinite;
     }
     
@@ -509,7 +506,7 @@ st.markdown(
         visibility: hidden;
         width: 120px;
         background-color: rgba(0, 0, 0, 0.8);
-        color: \\#fff;
+        color: \#fff;
         text-align: center;
         border-radius: 6px;
         padding: 5px;
@@ -532,7 +529,7 @@ st.markdown(
         position: absolute;
         top: -5px;
         right: -5px;
-        background-color: \\#FF4500;
+        background-color: \#FF4500;
         color: white;
         border-radius: 50%;
         width: 20px;
@@ -587,7 +584,7 @@ st.markdown(
     .crypto-table th {
         text-align: left;
         padding: 10px;
-        color: \\#AAAAAA;
+        color: \#AAAAAA;
         border-bottom: 1px solid rgba(255,255,255,0.1);
     }
     
@@ -1223,18 +1220,3 @@ elif section == "Features":
 
 # Auto-refresh the entire app setiap 15 detik
 st_autorefresh(interval=15000, key="refresh")
-`;
-
-console.log("Enhanced Streamlit Dashboard UI created successfully!");
-console.log("Key improvements:");
-console.log("1. Fixed CSS with properly escaped hex color codes (\\# instead of #)");
-console.log("2. Modern animated background with particle effect");
-console.log("3. Enhanced news cards with better sentiment visualization");
-console.log("4. Improved crypto price cards with currency symbols");
-console.log("5. Added market overview section with key indicators");
-console.log("6. Added trending coins table");
-console.log("7. Added sentiment analysis summary with visual indicators");
-console.log("8. Improved charts with better styling and period selectors");
-console.log("9. Enhanced sidebar with better navigation and clock display");
-console.log("10. Added tabbed interface for better organization");
-console.log("11. Added technical indicators and price predictions sections");
