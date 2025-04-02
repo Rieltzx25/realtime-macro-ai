@@ -1010,6 +1010,72 @@ def display_sentiment_summary(news_list):
     
     st.write(f"Based on analysis of {total} news articles")
 
+def display_sentiment_summary(news_list):
+    """Displays a summary of news sentiment"""
+    if not news_list:
+        return
+        
+    # Count sentiments
+    sentiments = {"Positif": 0, "Negatif": 0, "Netral": 0}
+    for item in news_list:
+        sentiment = analyze_sentiment(item['summary'])
+        if sentiment in sentiments:
+            sentiments[sentiment] += 1
+            
+    total = sum(sentiments.values())
+    if total == 0:
+        return
+        
+    # Calculate percentages
+    pos_percent = (sentiments["Positif"] / total) * 100
+    neg_percent = (sentiments["Negatif"] / total) * 100
+    neu_percent = (sentiments["Netral"] / total) * 100
+    
+    # Determine overall sentiment
+    overall = "Neutral"
+    if pos_percent > 60:
+        overall = "Bullish"
+    elif neg_percent > 60:
+        overall = "Bearish"
+    elif pos_percent > neg_percent + 20:
+        overall = "Slightly Bullish"
+    elif neg_percent > pos_percent + 20:
+        overall = "Slightly Bearish"
+    
+    # Create a feature card for sentiment analysis
+    st.markdown(f"""
+    <div class="feature-card">
+        <div class="feature-header">
+            <span class="feature-icon">🧠</span>
+            <h2 class="feature-title">News Sentiment Analysis</h2>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Display overall sentiment
+    sentiment_color = "#2ecc71" if "Bullish" in overall else "#e74c3c" if "Bearish" in overall else "#AAAAAA"
+    st.write(f"Overall Market Sentiment: **{overall}**")
+    
+    # Create columns for the progress bars
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.write("Positive")
+        st.progress(pos_percent/100)
+        st.write(f"{pos_percent:.1f}%")
+    
+    with col2:
+        st.write("Neutral")
+        st.progress(neu_percent/100)
+        st.write(f"{neu_percent:.1f}%")
+    
+    with col3:
+        st.write("Negative")
+        st.progress(neg_percent/100)
+        st.write(f"{neg_percent:.1f}%")
+    
+    st.write(f"Based on analysis of {total} news articles")
+
 # New function to display Fear and Greed Index
 def display_fear_greed_index():
     """Displays the Fear and Greed Index with proper visualization"""
@@ -1034,93 +1100,44 @@ def display_fear_greed_index():
         sentiment = "Extreme Greed"
         color = "#27ae60"
     
-    # Calculate the position of the indicator (percentage of the gauge width)
-    position_percent = fear_greed_value
-    
+    # Create a feature card header
     st.markdown(f"""
-    <div class="feature-card">
-        <div class="feature-header">
-            <span class="feature-icon">📊</span>
-            <h2 class="feature-title">Crypto Fear & Greed Index</h2>
-        </div>
-        <div class="feature-content fear-greed-container">
-            <div class="fear-greed-text">Current Status: <span style="color: {color}">{sentiment}</span></div>
-            <div class="fear-greed-value">{fear_greed_value}</div>
-            
-            <div class="fear-greed-gauge">
-                <div class="fear-greed-indicator" style="left: {position_percent}%;"></div>
-            </div>
-            
-            <div class="fear-greed-labels">
-                <span style="color: #e74c3c">Extreme Fear</span>
-                <span style="color: #f39c12">Fear</span>
-                <span style="color: #f1c40f">Neutral</span>
-                <span style="color: #2ecc71">Greed</span>
-                <span style="color: #27ae60">Extreme Greed</span>
-            </div>
-            
-            <p style="margin-top: 20px; text-align: center;">
-                The Fear & Greed Index analyzes emotions and sentiments from different sources and condenses them into a simple number.
-                <br>A value of 0 means "Extreme Fear", while a value of 100 represents "Extreme Greed".
-            </p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)def display_fear_greed_index():
-    """Displays the Fear and Greed Index with proper visualization"""
-    # Generate a random value between 0 and 100 for demo purposes
-    # In production, you would fetch this from an API
-    fear_greed_value = 65
+    <h2 style="color: white;">Crypto Fear & Greed Index</h2>
+    """, unsafe_allow_html=True)
     
-    # Determine the sentiment text based on the value
-    if fear_greed_value <= 25:
-        sentiment = "Extreme Fear"
-        color = "#e74c3c"
-    elif fear_greed_value <= 45:
-        sentiment = "Fear"
-        color = "#f39c12"
-    elif fear_greed_value <= 55:
-        sentiment = "Neutral"
-        color = "#f1c40f"
-    elif fear_greed_value <= 75:
-        sentiment = "Greed"
-        color = "#2ecc71"
-    else:
-        sentiment = "Extreme Greed"
-        color = "#27ae60"
-    
-    # Calculate the position of the indicator (percentage of the gauge width)
-    position_percent = fear_greed_value
-    
+    # Display current status and value
     st.markdown(f"""
-    <div class="feature-card">
-        <div class="feature-header">
-            <span class="feature-icon">📊</span>
-            <h2 class="feature-title">Crypto Fear & Greed Index</h2>
-        </div>
-        <div class="feature-content fear-greed-container">
-            <div class="fear-greed-text">Current Status: <span style="color: {color}">{sentiment}</span></div>
-            <div class="fear-greed-value">{fear_greed_value}</div>
-            
-            <div class="fear-greed-gauge">
-                <div class="fear-greed-indicator" style="left: {position_percent}%;"></div>
-            </div>
-            
-            <div class="fear-greed-labels">
-                <span style="color: #e74c3c">Extreme Fear</span>
-                <span style="color: #f39c12">Fear</span>
-                <span style="color: #f1c40f">Neutral</span>
-                <span style="color: #2ecc71">Greed</span>
-                <span style="color: #27ae60">Extreme Greed</span>
-            </div>
-            
-            <p style="margin-top: 20px; text-align: center;">
-                The Fear & Greed Index analyzes emotions and sentiments from different sources and condenses them into a simple number.
-                <br>A value of 0 means "Extreme Fear", while a value of 100 represents "Extreme Greed".
-            </p>
-        </div>
+    <div style="text-align: center;">
+        <h3>Current Status: <span style="color: {color}">{sentiment}</span></h3>
+        <h1 style="font-size: 48px; color: #3498db;">{fear_greed_value}</h1>
     </div>
     """, unsafe_allow_html=True)
-
+    
+    # Create a custom progress bar
+    # We'll use st.progress but style it to look like a gradient
+    st.progress(fear_greed_value/100)
+    
+    # Create a legend for the gauge
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        st.markdown(f'<p style="color: #e74c3c; text-align: center;">Extreme Fear</p>', unsafe_allow_html=True)
+    with col2:
+        st.markdown(f'<p style="color: #f39c12; text-align: center;">Fear</p>', unsafe_allow_html=True)
+    with col3:
+        st.markdown(f'<p style="color: #f1c40f; text-align: center;">Neutral</p>', unsafe_allow_html=True)
+    with col4:
+        st.markdown(f'<p style="color: #2ecc71; text-align: center;">Greed</p>', unsafe_allow_html=True)
+    with col5:
+        st.markdown(f'<p style="color: #27ae60; text-align: center;">Extreme Greed</p>', unsafe_allow_html=True)
+    
+    # Add description
+    st.markdown("""
+    <p style="margin-top: 20px; text-align: center;">
+        The Fear & Greed Index analyzes emotions and sentiments from different sources and condenses them into a simple number.
+        <br>A value of 0 means "Extreme Fear", while a value of 100 represents "Extreme Greed".
+    </p>
+    """, unsafe_allow_html=True)
 # New function to display Bitcoin Rainbow Chart
 def display_bitcoin_rainbow_chart():
     """Displays the Bitcoin Rainbow Chart with proper visualization"""
