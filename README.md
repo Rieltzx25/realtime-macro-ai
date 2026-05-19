@@ -1,5 +1,7 @@
 # Realtime Macro & Crypto Dashboard
 
+**Live app:** https://realtime-macro-ai-ueqsudyfw3kfsojenqukwx.streamlit.app/
+
 A Streamlit dashboard for tracking crypto prices, macro news, and market sentiment in real time.
 
 Built to stay on top of market conditions without juggling multiple tabs.
