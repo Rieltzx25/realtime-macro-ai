@@ -1010,72 +1010,6 @@ def display_sentiment_summary(news_list):
     
     st.write(f"Based on analysis of {total} news articles")
 
-def display_sentiment_summary(news_list):
-    """Displays a summary of news sentiment"""
-    if not news_list:
-        return
-        
-    # Count sentiments
-    sentiments = {"Positif": 0, "Negatif": 0, "Netral": 0}
-    for item in news_list:
-        sentiment = analyze_sentiment(item['summary'])
-        if sentiment in sentiments:
-            sentiments[sentiment] += 1
-            
-    total = sum(sentiments.values())
-    if total == 0:
-        return
-        
-    # Calculate percentages
-    pos_percent = (sentiments["Positif"] / total) * 100
-    neg_percent = (sentiments["Negatif"] / total) * 100
-    neu_percent = (sentiments["Netral"] / total) * 100
-    
-    # Determine overall sentiment
-    overall = "Neutral"
-    if pos_percent > 60:
-        overall = "Bullish"
-    elif neg_percent > 60:
-        overall = "Bearish"
-    elif pos_percent > neg_percent + 20:
-        overall = "Slightly Bullish"
-    elif neg_percent > pos_percent + 20:
-        overall = "Slightly Bearish"
-    
-    # Create a feature card for sentiment analysis
-    st.markdown(f"""
-    <div class="feature-card">
-        <div class="feature-header">
-            <span class="feature-icon">🧠</span>
-            <h2 class="feature-title">News Sentiment Analysis</h2>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Display overall sentiment
-    sentiment_color = "#2ecc71" if "Bullish" in overall else "#e74c3c" if "Bearish" in overall else "#AAAAAA"
-    st.write(f"Overall Market Sentiment: **{overall}**")
-    
-    # Create columns for the progress bars
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.write("Positive")
-        st.progress(pos_percent/100)
-        st.write(f"{pos_percent:.1f}%")
-    
-    with col2:
-        st.write("Neutral")
-        st.progress(neu_percent/100)
-        st.write(f"{neu_percent:.1f}%")
-    
-    with col3:
-        st.write("Negative")
-        st.progress(neg_percent/100)
-        st.write(f"{neg_percent:.1f}%")
-    
-    st.write(f"Based on analysis of {total} news articles")
-
 # New function to display Fear and Greed Index
 def display_fear_greed_index():
     """Displays the Fear and Greed Index with proper visualization"""
@@ -1253,19 +1187,9 @@ st.sidebar.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Create styled navigation buttons
+# Navigation — radio buttons only (single style)
 section_options = ["News Feed", "Features"]
 section = st.sidebar.radio("", section_options, label_visibility="collapsed")
-
-# Display styled navigation items
-for option in section_options:
-    is_active = option == section
-    active_class = "active" if is_active else ""
-    st.sidebar.markdown(f"""
-    <div class="sidebar-nav-item {active_class}">
-        {option}
-    </div>
-    """, unsafe_allow_html=True)
 
 # Enhanced search box
 st.sidebar.markdown("""
